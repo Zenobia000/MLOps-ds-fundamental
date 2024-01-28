@@ -1,2 +1,2 @@
-# MLOps_fundamention
+# MLOps_fundamentals
 MLOps
