@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/xdxd2/Sunny_VS_worksapce/Sunny_python/ML/MLOps_fundamentals/MLflow/basic/mlruns/538886383285448009/c1df93fec61f4867ae4ad5d62cbe53a2/artifacts
+end_time: 1706505321247
+entry_point_name: ''
+experiment_id: '538886383285448009'
+lifecycle_stage: active
+run_id: c1df93fec61f4867ae4ad5d62cbe53a2
+run_name: dapper-hog-577
+run_uuid: c1df93fec61f4867ae4ad5d62cbe53a2
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1706505316382
+status: 3
+tags: []
+user_id: xdxd2
