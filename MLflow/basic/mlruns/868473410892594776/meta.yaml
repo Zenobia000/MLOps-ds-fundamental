@@ -1,0 +1,6 @@
+artifact_location: file:///C:/Users/xdxd2/Sunny_VS_worksapce/Sunny_python/ML/MLOps_fundamentals/MLflow/basic/mlruns/868473410892594776
+creation_time: 1706524325720
+experiment_id: '868473410892594776'
+last_update_time: 1706524325720
+lifecycle_stage: active
+name: bayesian_optimized_wine_quality_prediction

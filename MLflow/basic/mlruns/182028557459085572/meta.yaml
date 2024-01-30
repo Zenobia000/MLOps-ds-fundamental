@@ -1,0 +1,6 @@
+artifact_location: file:///C:/Users/xdxd2/Sunny_VS_worksapce/Sunny_python/ML/MLOps_fundamentals/MLflow/basic/mlruns/182028557459085572
+creation_time: 1706580491706
+experiment_id: '182028557459085572'
+last_update_time: 1706580491706
+lifecycle_stage: active
+name: bayesian_optimization_n_iter_cv_experiment

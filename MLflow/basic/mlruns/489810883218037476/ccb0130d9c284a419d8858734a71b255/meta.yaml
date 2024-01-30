@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/xdxd2/Sunny_VS_worksapce/Sunny_python/ML/MLOps_fundamentals/MLflow/basic/mlruns/489810883218037476/ccb0130d9c284a419d8858734a71b255/artifacts
+end_time: 1706523241152
+entry_point_name: ''
+experiment_id: '489810883218037476'
+lifecycle_stage: active
+run_id: ccb0130d9c284a419d8858734a71b255
+run_name: rare-chimp-131
+run_uuid: ccb0130d9c284a419d8858734a71b255
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1706523235569
+status: 4
+tags: []
+user_id: xdxd2

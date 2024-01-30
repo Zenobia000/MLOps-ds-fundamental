@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/xdxd2/Sunny_VS_worksapce/Sunny_python/ML/MLOps_fundamentals/MLflow/basic/mlruns/489810883218037476/95afcfbc8b814f5ca74928759a881fdf/artifacts
+end_time: 1706523220659
+entry_point_name: ''
+experiment_id: '489810883218037476'
+lifecycle_stage: active
+run_id: 95afcfbc8b814f5ca74928759a881fdf
+run_name: melodic-dove-538
+run_uuid: 95afcfbc8b814f5ca74928759a881fdf
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1706523215597
+status: 3
+tags: []
+user_id: xdxd2

@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/xdxd2/Sunny_VS_worksapce/Sunny_python/ML/MLOps_fundamentals/MLflow/basic/mlruns/182028557459085572/9430ea8567744dbbbcee351e6e21d104/artifacts
+end_time: 1706580537823
+entry_point_name: ''
+experiment_id: '182028557459085572'
+lifecycle_stage: active
+run_id: 9430ea8567744dbbbcee351e6e21d104
+run_name: run-1_n_iter_10_cv_values_5
+run_uuid: 9430ea8567744dbbbcee351e6e21d104
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1706580532604
+status: 3
+tags: []
+user_id: xdxd2
