@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/xdxd2/Sunny_VS_worksapce/Sunny_python/ML/MLOps_fundamentals/MLflow/basic/mlruns/370280449364329886/5886687ca8ab49aaaffe308993951f86/artifacts
+end_time: null
+entry_point_name: ''
+experiment_id: '370280449364329886'
+lifecycle_stage: active
+run_id: 5886687ca8ab49aaaffe308993951f86
+run_name: validation_model
+run_uuid: 5886687ca8ab49aaaffe308993951f86
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1706682513877
+status: 1
+tags: []
+user_id: xdxd2

@@ -1,0 +1,8 @@
+{
+  "mean_absolute_error-2_test_x": "mean_absolute_error(y_true=test_y, y_pred=baseline_predicted_qualites)",
+  "mean_absolute_error_test_x": "mean_absolute_error(y_true=test_y, y_pred=predicted_qualities)",
+  "mean_squared_error-2_test_x": "mean_squared_error(y_true=test_y, y_pred=baseline_predicted_qualites)",
+  "mean_squared_error_test_x": "mean_squared_error(y_true=test_y, y_pred=predicted_qualities)",
+  "r2_score-2_test_x": "r2_score(y_true=test_y, y_pred=baseline_predicted_qualites)",
+  "r2_score_test_x": "r2_score(y_true=test_y, y_pred=predicted_qualities)"
+}

@@ -1,0 +1,15 @@
+artifact_uri: mlflow-artifacts:/0/af8f6e1d71784c618de6ede33d281165/artifacts
+end_time: 1706665953792
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: af8f6e1d71784c618de6ede33d281165
+run_name: receptive-hound-890
+run_uuid: af8f6e1d71784c618de6ede33d281165
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1706665842321
+status: 3
+tags: []
+user_id: xdxd2

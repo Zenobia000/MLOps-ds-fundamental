@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/xdxd2/Sunny_VS_worksapce/Sunny_python/ML/MLOps_fundamentals/MLflow/basic/mlruns/370280449364329886/91a1fbdb67474a7aaaafc93060b70cfc/artifacts
+end_time: 1706694645321
+entry_point_name: ''
+experiment_id: '370280449364329886'
+lifecycle_stage: active
+run_id: 91a1fbdb67474a7aaaafc93060b70cfc
+run_name: angry-shrike-163
+run_uuid: 91a1fbdb67474a7aaaafc93060b70cfc
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1706694640758
+status: 3
+tags: []
+user_id: xdxd2

@@ -1,0 +1,23 @@
+artifact_path: sklear_mlflow_pyfunc
+flavors:
+  python_function:
+    artifacts:
+      data:
+        path: artifacts\red-wine-data
+        uri: red-wine-data
+      sklearn_model:
+        path: artifacts\sklearn_model.pkl
+        uri: sklearn_model.pkl
+    cloudpickle_version: 2.2.0
+    code: code
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.pyfunc.model
+    python_model: python_model.pkl
+    python_version: 3.10.7
+mlflow_version: 2.10.0
+model_size_bytes: 230874
+model_uuid: 6e300799428945589ee7e44a71ce2bb4
+run_id: cd7817c8299940ad88be7f55f6f45051
+utc_time_created: '2024-01-31 06:40:55.274524'
