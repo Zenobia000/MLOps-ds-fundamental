@@ -1,0 +1,20 @@
+artifact_path: BaseModel
+flavors:
+  python_function:
+    artifacts:
+      BaseModel:
+        path: artifacts\baseline_sklearn_model.pkl
+        uri: baseline_sklearn_model.pkl
+    cloudpickle_version: 2.2.0
+    code: code
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.pyfunc.model
+    python_model: python_model.pkl
+    python_version: 3.10.7
+mlflow_version: 2.10.0
+model_size_bytes: 3918
+model_uuid: 80ff6cf171b94e65b8be9fc6c7f259e6
+run_id: 3a8e044578f14b558282628c42474760
+utc_time_created: '2024-02-01 06:00:41.124024'

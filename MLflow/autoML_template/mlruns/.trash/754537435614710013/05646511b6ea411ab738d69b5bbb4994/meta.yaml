@@ -1,0 +1,16 @@
+artifact_uri: file:///C:/Users/xdxd2/Sunny_VS_worksapce/Sunny_python/ML/MLOps_fundamentals/MLflow/autoML_template/mlruns/754537435614710013/05646511b6ea411ab738d69b5bbb4994/artifacts
+deleted_time: 1706766713489
+end_time: null
+entry_point_name: ''
+experiment_id: '754537435614710013'
+lifecycle_stage: deleted
+run_id: 05646511b6ea411ab738d69b5bbb4994
+run_name: validation_model
+run_uuid: 05646511b6ea411ab738d69b5bbb4994
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1706761449748
+status: 1
+tags: []
+user_id: xdxd2

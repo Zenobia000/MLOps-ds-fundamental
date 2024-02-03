@@ -1,0 +1,23 @@
+artifact_path: ElasticNetModel
+flavors:
+  python_function:
+    artifacts:
+      ElasticNetModel:
+        path: artifacts\sklearn_model.pkl
+        uri: sklearn_model.pkl
+      data:
+        path: artifacts\red-wine-data
+        uri: red-wine-data
+    cloudpickle_version: 2.2.0
+    code: code
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.pyfunc.model
+    python_model: python_model.pkl
+    python_version: 3.10.7
+mlflow_version: 2.10.0
+model_size_bytes: 4852
+model_uuid: ab2aac08cc7c4efeb31a0b3cdb6954f2
+run_id: 0dcccf59b0e5491f91a9cc8b64983d99
+utc_time_created: '2024-02-01 04:37:57.074070'
