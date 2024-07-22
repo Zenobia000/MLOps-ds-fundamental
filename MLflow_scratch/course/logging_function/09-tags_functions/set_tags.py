@@ -105,3 +105,4 @@ if __name__ == "__main__":
     run = mlflow.last_active_run()
     print("Active run id is {}".format(run.info.run_id))
     print("Active run name is {}".format(run.info.run_name))
+
