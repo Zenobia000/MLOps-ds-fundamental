@@ -1,0 +1,15 @@
+artifact_uri: file:///D:/python_workspace/Sunny_ML_Learning/mlflow_practice/course/logging_function/09-tags_functions/mlruns/893755801324810070/9f46745e7fa64615856c3543347fbf06/artifacts
+end_time: 1719476917109
+entry_point_name: ''
+experiment_id: '893755801324810070'
+lifecycle_stage: active
+run_id: 9f46745e7fa64615856c3543347fbf06
+run_name: param_1
+run_uuid: 9f46745e7fa64615856c3543347fbf06
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1719476914277
+status: 3
+tags: []
+user_id: wwy
