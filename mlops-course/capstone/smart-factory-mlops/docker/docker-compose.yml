@@ -1,0 +1,120 @@
+# =============================================================================
+# 本地 MLOps 平台（M1 起步 → M4/M6 完整）：
+#   mlflow（實驗追蹤 / registry）+ redis（Feast online store）+ serve（本服務）
+#   + prometheus（指標）+ grafana（dashboard）。
+# 使用（repo 根目錄）：
+#   docker compose -f docker/docker-compose.yml up -d
+#   docker compose -f docker/docker-compose.yml down          # 保留資料
+#   docker compose -f docker/docker-compose.yml down -v       # 清空 volume（破壞性）
+#
+# 注意：build context 設為上層（..），讓 Dockerfile 能 COPY src/ services/ conf/。
+# 密鑰一律由 .env 注入，compose 檔內不硬編碼任何憑證。
+# =============================================================================
+
+services:
+  # --- 實驗追蹤 + Model Registry ------------------------------------------
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.12.1
+    command: >
+      mlflow server
+      --host 0.0.0.0 --port 5000
+      --backend-store-uri sqlite:////mlflow/mlflow.db
+      --artifacts-destination /mlflow/artifacts
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlflow_data:/mlflow
+    networks: [mlops]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0) if urllib.request.urlopen('http://localhost:5000/health').status==200 else sys.exit(1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    restart: unless-stopped
+
+  # --- Feast online store（低延遲特徵查詢）--------------------------------
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--save", "60", "1", "--appendonly", "no"]
+    ports:
+      - "127.0.0.1:6379:6379"   # 僅本機可連，避免對外暴露
+    volumes:
+      - redis_data:/data
+    networks: [mlops]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  # --- 本服務：BentoML 統一 API（表格 + 影像）----------------------------
+  serve:
+    build:
+      context: ..                       # repo 根作為 build context
+      dockerfile: docker/Dockerfile.serve
+    image: smart-factory-serve:latest
+    ports:
+      - "3000:3000"
+    env_file:
+      - ../.env                          # 密鑰 / 連線字串由此注入（不進 image）
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - FEAST_REDIS_HOST=redis
+      - FEAST_REDIS_PORT=6379
+    depends_on:
+      mlflow:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks: [mlops]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:3000/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+
+  # --- 指標收集 ------------------------------------------------------------
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    ports:
+      - "9090:9090"
+    volumes:
+      # 由監控 agent 在 monitoring/grafana/ 提供 prometheus 設定（含抓 serve /metrics）
+      - ../monitoring/grafana/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    depends_on:
+      - serve
+    networks: [mlops]
+    restart: unless-stopped
+
+  # --- 視覺化 dashboard ---------------------------------------------------
+  grafana:
+    image: grafana/grafana:11.1.0
+    ports:
+      - "3001:3000"                      # 對外 3001，避開 serve 的 3000
+    env_file:
+      - ../.env                          # GF_SECURITY_ADMIN_PASSWORD 等由 .env 提供
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      # 由監控 agent 提供 dashboard JSON 與 datasource provisioning
+      - ../monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
+    networks: [mlops]
+    restart: unless-stopped
+
+networks:
+  mlops:
+    driver: bridge
+
+volumes:
+  mlflow_data:
+  redis_data:
+  prometheus_data:
+  grafana_data:

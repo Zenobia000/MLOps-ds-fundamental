@@ -1,0 +1,44 @@
+# sandbox/github-actions/ci.yml — 階 10 GitHub Actions 最小可用 workflow
+#
+# 這個檔示範什麼：
+#   一條「最小 CI」—— 每次 push 就自動跑 pytest。
+#   只教三件事：on（什麼時候觸發）、runs-on（在哪台機器跑）、steps（跑哪些指令）。
+#   matrix / cache / OIDC / self-hosted 全部延後。
+#
+# 重要：這個檔放在 sandbox/ 只是給你「看」的範本。
+#   真實使用時，要把它複製到 repo 根目錄的 .github/workflows/ci.yml，
+#   GitHub 才會偵測並執行（見本資料夾 README.md）。
+
+name: ci                      # workflow 名稱，會顯示在 GitHub Actions 頁面
+
+on:
+  push:                       # 觸發時機：任何 push 都跑（最小設定）
+    branches: ["**"]          # 所有分支；真實專案常只在 main 與 PR 上跑
+
+jobs:
+  test:                       # 一個 job 叫 test
+    runs-on: ubuntu-latest    # 在 GitHub 提供的 Ubuntu 機器上跑
+
+    steps:
+      # 步驟一：把你的程式碼 checkout 到 runner 上
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 步驟二：準備 Python 3.11 環境（與課程一致）
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # 步驟三：安裝測試需要的套件（沙盒只需要 pytest）
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest
+
+      # 步驟四：跑測試 —— 這就是 CI 的「品質門檻 gate」。
+      #   測試一旦失敗，這個 step 會回傳非 0，整條 workflow 變紅，
+      #   push / PR 就被標記為「未通過」，達到「壞 code 進不來」的目的。
+      - name: Run pytest
+        run: |
+          python -m pytest modules/m5-automation/sandbox/tests/ -v

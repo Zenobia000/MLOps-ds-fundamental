@@ -1,0 +1,18 @@
+# =============================================================================
+# 模型設定：LSTM（產能需求預測）
+# -----------------------------------------------------------------------------
+# 契約：name + params{...}。由 src/models/timeseries 載入，建立 PyTorch LSTM
+# 迴歸器，吃 (batch, lookback, n_features) 輸出 horizon 步預測。
+# 視窗大小（lookback/horizon）來自 conf/data/demand.yaml。
+# =============================================================================
+
+name: lstm
+task: regression
+
+params:
+  input_size: 1               # 單變量需求序列
+  hidden_size: 64
+  num_layers: 2
+  dropout: 0.1
+  bidirectional: false
+  output_size: 6              # 對應 conf/data/demand.yaml 的 horizon

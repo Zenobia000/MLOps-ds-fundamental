@@ -1,0 +1,6 @@
+# 這些都是「跑出來的產物」,不要進版控;照 README 步驟即可重新產生。
+feature_repo/data/*.parquet
+feature_repo/data/registry.db
+feature_repo/data/online_store.db
+.venv/
+__pycache__/

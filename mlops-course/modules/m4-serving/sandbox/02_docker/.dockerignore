@@ -1,0 +1,9 @@
+# 不要把這些東西塞進 image,讓 build 更快、image 更小
+__pycache__/
+*.pyc
+*.pyo
+.git/
+.venv/
+venv/
+*.md
+.DS_Store

@@ -1,0 +1,62 @@
+# =============================================================================
+# 服務映像（M4）：BentoML 統一 API（表格 + 影像）。
+# 多階段 + 非 root + healthcheck；刻意「瘦身」（不背 torch / 訓練套件）。
+# 建置（repo 根目錄）：
+#   docker build -f docker/Dockerfile.serve -t smart-factory-serve:latest .
+# 執行：
+#   docker run --rm -p 3000:3000 --env-file .env smart-factory-serve:latest
+# =============================================================================
+
+# ---- Stage 1: builder ─ 安裝依賴到隔離 prefix，產物再複製到 runtime --------
+FROM python:3.11-slim AS builder
+
+ENV PIP_NO_CACHE_DIR=1 \
+    PYTHONDONTWRITEBYTECODE=1
+
+WORKDIR /build
+
+# 服務僅需推論依賴（與 services/requirements-serve.txt 共用，避免漂移）
+COPY services/requirements-serve.txt ./requirements-serve.txt
+RUN pip install --upgrade pip \
+    && pip install --prefix=/install -r requirements-serve.txt
+
+# ---- Stage 2: runtime ─ 最小映像、非 root、healthcheck ---------------------
+FROM python:3.11-slim AS runtime
+
+# 影像推論需 libgl/libglib（Pillow / ONNX 影像前處理）；libgomp 供 XGBoost
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        libgomp1 \
+        libgl1 \
+        libglib2.0-0 \
+        curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# 非 root 使用者（固定 uid 便於 K8s securityContext 對齊）
+RUN useradd -r -u 1001 -m appuser
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONPATH=/app \
+    BENTOML_DO_NOT_TRACK=True \
+    PORT=3000
+
+WORKDIR /app
+
+# 從 builder 帶入已安裝套件
+COPY --from=builder /install /usr/local
+
+# 只複製服務執行期需要的程式碼與設定（資料 / models 不進 image）
+COPY --chown=appuser:appuser src/ ./src/
+COPY --chown=appuser:appuser services/ ./services/
+COPY --chown=appuser:appuser conf/ ./conf/
+
+USER appuser
+
+EXPOSE 3000
+
+# 健康檢查：打 BentoML 內建 /healthz；start-period 給模型載入緩衝
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+    CMD curl -fsS "http://localhost:${PORT}/healthz" || exit 1
+
+# 以 BentoML 啟動統一服務；production_mode 多 worker 由 BentoML 管理
+CMD ["bentoml", "serve", "services.service:svc", "--host", "0.0.0.0", "--port", "3000"]

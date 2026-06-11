@@ -1,0 +1,18 @@
+# 訓練映像依賴（重套件集中於此，服務映像不背這些）。
+# 與 pyproject.toml 的 [train] extra 對齊；CI/CD 與 Dockerfile.train 共用。
+numpy>=1.26
+pandas>=2.1
+scikit-learn>=1.4
+xgboost>=2.0
+optuna>=3.5
+mlflow>=2.10
+pyyaml>=6.0
+pydantic>=2.5
+# 影像（ResNet 微調 + ONNX 匯出）
+torch>=2.2
+torchvision>=0.17
+onnx>=1.15
+onnxruntime>=1.17
+pillow>=10.0
+# 時序（需求預測）
+# 註：若用 Prophet 改裝 prophet；此處以輕量為主，LSTM 走 torch

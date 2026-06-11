@@ -1,0 +1,44 @@
+# =============================================================================
+# 根設定（root config）— Smart Factory MLOps Capstone
+# -----------------------------------------------------------------------------
+# 本檔為「單一事實來源」（single source of truth），由 src/utils/config.py
+# 的 load_config() 載入。所有跨 agent 共用的契約欄位都集中在這裡：
+#   project / seed / paths / mlflow / active_model
+# 切換資料集或模型時「只改設定、不改程式」，符合 config-driven 原則。
+# =============================================================================
+
+project: smart-factory-mlops
+
+# 全域隨機種子；由 src/utils/seed.py 的 set_seed() 套用到 numpy / torch / random。
+seed: 42
+
+# 相對路徑一律相對於 repo 根（執行 `python -m src.xxx` 的工作目錄）。
+paths:
+  data_raw: data/raw            # 原始：感測器 csv、瑕疵影像、需求歷史
+  data_interim: data/interim    # 清洗中繼
+  data_processed: data/processed # 可訓練特徵集
+  data_external: data/external  # 外部資料（C-MAPSS / MVTec AD）
+  models: models                # 本地模型產物（DVC / registry 管理，gitignore）
+
+# MLflow 實驗追蹤；tracking_uri 可被環境變數 MLFLOW_TRACKING_URI 覆蓋。
+mlflow:
+  tracking_uri: ${oc.env:MLFLOW_TRACKING_URI,http://localhost:5000}
+  experiment: smart-factory
+
+# 目前啟用的模型；對應 conf/model/<name>.yaml。
+# 可選值：xgboost（預測維護）/ lstm（需求預測）/ resnet（瑕疵檢測）。
+active_model: xgboost
+
+# 服務化設定；由 src/serving/model_loader.py 載入模型時讀取。
+# 模型優先從 MLflow Registry 以 name+stage 取，取不到再退回 paths.models 本地檔。
+serving:
+  tabular_model_name: smart_factory_tabular   # 預測維護模型在 registry 的名稱
+  tabular_model_stage: Production              # 取哪個生命週期階段（Production/Staging）
+  vision_model_name: smart_factory_vision      # 瑕疵檢測模型在 registry 的名稱
+  vision_model_stage: Production
+
+# 子設定群組的預設選擇（教學用簡化版 Hydra defaults 概念）。
+defaults:
+  data: sensors
+  model: xgboost
+  train: default

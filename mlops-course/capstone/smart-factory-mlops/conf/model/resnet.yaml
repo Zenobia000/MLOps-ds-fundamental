@@ -1,0 +1,24 @@
+# =============================================================================
+# 模型設定：ResNet 微調（產線視覺瑕疵檢測）
+# -----------------------------------------------------------------------------
+# 契約：name + params{...}。由 src/models/vision 載入 torchvision 預訓練 ResNet，
+# 替換最後一層為 num_classes 輸出，微調後匯出 ONNX。
+# HPO 搜尋空間見 conf/hpo/resnet.yaml。
+# =============================================================================
+
+name: resnet
+task: image_classification
+
+params:
+  backbone: resnet18          # torchvision 預訓練骨幹（resnet18 / resnet50）
+  pretrained: true            # 使用 ImageNet 預訓練權重
+  num_classes: 2              # good / defect
+  freeze_backbone: true       # 只訓練分類頭（小資料防過擬合）
+  dropout: 0.2
+
+# ONNX 匯出設定（供 src/serving 用 onnxruntime 推論）。
+onnx:
+  export: true
+  opset: 17
+  dynamic_batch: true
+  output_name: defect_resnet.onnx

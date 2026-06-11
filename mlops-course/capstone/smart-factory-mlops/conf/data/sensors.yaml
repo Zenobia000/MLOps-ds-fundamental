@@ -1,0 +1,31 @@
+# =============================================================================
+# 資料設定：結構化 + 時序感測器（預測性維護）
+# -----------------------------------------------------------------------------
+# 場景：以設備感測器（溫度 / 振動 / 電流）預測故障（failure 0/1）。
+# 對應模型：XGBoost（conf/model/xgboost.yaml）。
+# smoke test 用玩具資料 toy_sensors.csv；真實資料用 NASA C-MAPSS（見 data/README）。
+# =============================================================================
+
+name: sensors
+kind: tabular_timeseries
+
+# smoke test 預設指向課程共用玩具資料（相對 repo 根的多層上溯）。
+# 正式跑改成 data/raw/sensors.csv（由 DVC prepare 階段產出）。
+source: ../../datasets/toy_sensors.csv
+
+# 實體與時間鍵（跨 agent 契約：entity = machine_id，時間 = event_timestamp）。
+entity_column: machine_id
+timestamp_column: event_timestamp
+
+# 特徵與標籤欄位。
+feature_columns:
+  - temperature
+  - vibration
+  - current
+target_column: failure
+
+# 切分策略：時序資料用時間切，避免未來資訊洩漏（leakage）。
+split:
+  strategy: temporal      # temporal | random
+  test_size: 0.2
+  val_size: 0.1

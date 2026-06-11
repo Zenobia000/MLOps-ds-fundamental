@@ -1,0 +1,82 @@
+name: Train and Register
+
+# 持續訓練（CT）：手動或排程觸發訓練管線，跑「品質門檻 gate」，
+# 達標才把模型註冊進 registry。教學重點：訓練不是 push 就跑，
+# 而是「資料/程式變動 -> 受控訓練 -> 門檻把關 -> 註冊」。
+
+on:
+  workflow_dispatch:
+    inputs:
+      model:
+        description: "要訓練的模型（對應 conf/model/<name>.yaml）"
+        required: false
+        default: "xgboost"
+  schedule:
+    # 每週一 02:00 UTC 定期再訓練，偵測資料漂移後的模型衰退。
+    - cron: "0 2 * * 1"
+
+defaults:
+  run:
+    working-directory: mlops-course/capstone/smart-factory-mlops
+
+permissions:
+  contents: read
+
+jobs:
+  train:
+    name: Train with quality gate
+    runs-on: ubuntu-latest
+    env:
+      # 不硬編碼密鑰：MLflow 端點/憑證一律走 repo secrets。
+      MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
+      MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
+      MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
+      ACTIVE_MODEL: ${{ github.event.inputs.model || 'xgboost' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]" || pip install -r requirements.txt || true
+          pip install scikit-learn pandas numpy pyyaml
+
+      - name: Run training pipeline (with gate)
+        id: train
+        run: |
+          python -m pipelines.training_pipeline | tee train.log
+          # 從管線輸出判斷品質門檻是否通過
+          if grep -q "未達品質門檻" train.log; then
+            echo "gate_passed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "gate_passed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Fail if quality gate not passed
+        if: steps.train.outputs.gate_passed != 'true'
+        run: |
+          echo "::error::模型未通過品質門檻，停止註冊。"
+          exit 1
+
+      - name: Upload training log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: train-log
+          path: mlops-course/capstone/smart-factory-mlops/train.log
+          if-no-files-found: ignore
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "## 訓練結果"
+            echo "- 模型: \`${ACTIVE_MODEL}\`"
+            echo "- 品質門檻: ${{ steps.train.outputs.gate_passed == 'true' && '通過 ✅，已觸發註冊' || '未通過 ❌' }}"
+          } >> "$GITHUB_STEP_SUMMARY"

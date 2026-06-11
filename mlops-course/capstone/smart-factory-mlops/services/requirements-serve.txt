@@ -1,0 +1,10 @@
+# 服務（推論）執行期最小依賴 ─ 刻意「瘦身」：不含 torch / 訓練套件
+# 由 services/bentofile.yaml 與 docker/Dockerfile.serve 共用。
+bentoml>=1.2,<2.0
+xgboost>=2.0
+onnxruntime>=1.17
+mlflow>=2.10
+pydantic>=2.5
+numpy>=1.26
+pillow>=10.0
+pyyaml>=6.0

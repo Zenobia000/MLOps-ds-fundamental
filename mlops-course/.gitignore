@@ -1,0 +1,84 @@
+# ──────────────────────────────────────────────────────────────
+# MLOps 教學 repo — 忽略產物（教材本身與資料夾結構照常追蹤）
+# ──────────────────────────────────────────────────────────────
+
+# ── Python ────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+*.egg
+
+# ── 虛擬環境 ──────────────────────────────────────────────────
+.venv/
+venv/
+env/
+.conda/
+
+# ── 環境變數 / 秘密 ───────────────────────────────────────────
+.env
+.env.*
+*.secret
+
+# ── Notebook ──────────────────────────────────────────────────
+.ipynb_checkpoints/
+
+# ── MLflow（m2）追蹤產物 ──────────────────────────────────────
+mlruns/
+mlartifacts/
+
+# ── Optuna / 一般資料庫產物 ───────────────────────────────────
+*.db
+*.sqlite
+*.sqlite3
+
+# ── DVC（m2 階 3）：追蹤 .dvc 指標檔，忽略快取與本地 remote ──
+/.dvc/cache/
+/.dvc/tmp/
+.dvc/cache/
+.dvc/tmp/
+dvc-remote/
+
+# ── 資料 / 模型產物（玩具資料本身仍追蹤；這裡擋大型產出）─────
+*.parquet
+*.pkl
+*.joblib
+*.onnx
+*.pt
+*.pth
+*.h5
+*.ckpt
+
+# ── Feast（m3）本地 registry / online store 產物 ──────────────
+*registry.db
+online_store.db
+data/online_store.db
+
+# ── BentoML（m4）本地 store ───────────────────────────────────
+bentoml/
+.bentoml/
+*.bento
+
+# ── Prefect（m5）本地產物 ─────────────────────────────────────
+.prefect/
+
+# ── Evidently / 報告產出（m6）────────────────────────────────
+reports/*.html
+*.report.html
+
+# ── 測試 / 覆蓋率 ─────────────────────────────────────────────
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# ── 編輯器 / 作業系統 ─────────────────────────────────────────
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

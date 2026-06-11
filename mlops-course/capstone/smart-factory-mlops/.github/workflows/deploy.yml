@@ -1,0 +1,87 @@
+name: Build and Deploy
+
+# 部署：build 服務映像 -> 推 registry -> canary 部署（佔位）。
+# 教學重點：image 不可變 + canary 漸進放量，失敗可快速 rollback。
+# 真正的雲端部署留佔位，避免教學環境需要真實 K8s/雲帳號。
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "要部署的映像 tag（預設用 commit sha）"
+        required: false
+  workflow_run:
+    # 訓練並註冊成功後，自動接力部署。
+    workflows: ["Train and Register"]
+    types: [completed]
+
+defaults:
+  run:
+    working-directory: mlops-course/capstone/smart-factory-mlops
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  IMAGE_NAME: smart-factory-serve
+
+jobs:
+  build:
+    name: Build serve image
+    # workflow_run 觸發時，只有上游成功才繼續。
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    outputs:
+      image_tag: ${{ steps.meta.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Compute image tag
+        id: meta
+        run: |
+          TAG="${{ github.event.inputs.image_tag }}"
+          if [ -z "$TAG" ]; then TAG="${GITHUB_SHA::12}"; fi
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: Build image (load locally, push 留佔位)
+        uses: docker/build-push-action@v6
+        with:
+          context: mlops-course/capstone/smart-factory-mlops
+          file: mlops-course/capstone/smart-factory-mlops/docker/Dockerfile.serve
+          tags: ${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.tag }}
+          load: true
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  canary:
+    name: Canary deploy (placeholder)
+    needs: build
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: pip install pandas numpy pyyaml
+
+      - name: Canary deploy via deployment pipeline
+        env:
+          DEPLOY_TARGET: ${{ secrets.DEPLOY_TARGET }}
+        run: |
+          echo "[佔位] 對映像 ${{ needs.build.outputs.image_tag }} 執行 canary 部署。"
+          python -m pipelines.deployment_pipeline
+
+      - name: Smoke probe gate
+        run: |
+          echo "[佔位] canary smoke 通過後才 promote 全量。"
+          echo "::notice::canary 部署完成（教學佔位，未連真實叢集）。"

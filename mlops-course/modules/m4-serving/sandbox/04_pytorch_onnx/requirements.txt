@@ -1,0 +1,8 @@
+# 04_pytorch_onnx 沙盒依賴(CPU-only,無 GPU 後援)
+# torch/torchvision 預設裝 CPU 版即可;若要 GPU 版請參考 PyTorch 官網對應 CUDA 指令。
+torch==2.4.1
+torchvision==0.19.1
+onnx==1.16.2
+onnxruntime==1.19.2
+bentoml==1.3.4
+numpy==2.1.1

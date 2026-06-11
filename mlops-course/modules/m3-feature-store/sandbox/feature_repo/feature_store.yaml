@@ -1,0 +1,17 @@
+# Feast 的中央設定檔。`feast apply` / `feast materialize` 都會讀這個檔。
+# 本教學用「最小可用」設定:全部跑在本機,不依賴任何雲端服務。
+
+project: feature_repo              # 專案命名空間(同一台機器可有多個 project)
+provider: local                   # local = 一切都在本機(對照 aws / gcp)
+
+# 離線特徵的中繼資料登記簿(entity / feature view 定義存這裡)
+registry: data/registry.db
+
+# 線上特徵存放區:即時推論時用 key 秒查的地方。
+# 教學用 sqlite(一個檔就是一個 DB),正式環境常換成 Redis。
+online_store:
+    type: sqlite
+    path: data/online_store.db
+
+# entity key 的序列化版本,新版 Feast 用 2(照官方建議固定即可)
+entity_key_serialization_version: 2

@@ -1,0 +1,25 @@
+# =============================================================================
+# 模型設定：XGBoost（預測性維護分類器）
+# -----------------------------------------------------------------------------
+# 契約：name + params{...}。params 直接展開餵給 xgboost.XGBClassifier(**params)。
+# 由 src/models/tabular 載入；HPO 搜尋空間見 conf/hpo/xgboost.yaml。
+# =============================================================================
+
+name: xgboost
+task: binary_classification
+
+params:
+  objective: binary:logistic
+  eval_metric: aucpr          # 故障為不平衡事件，用 PR-AUC 較合理
+  n_estimators: 300
+  max_depth: 6
+  learning_rate: 0.05
+  subsample: 0.8
+  colsample_bytree: 0.8
+  min_child_weight: 1
+  gamma: 0.0
+  reg_alpha: 0.0
+  reg_lambda: 1.0
+  tree_method: hist
+  n_jobs: -1
+  random_state: 42
