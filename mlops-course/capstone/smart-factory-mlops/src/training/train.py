@@ -60,6 +60,15 @@ def run(cfg: Mapping[str, Any]) -> TrainArtifacts:
 
     mlflow = _setup_mlflow(cfg)
     train_cfg = cfg.get("train", {})
+    # 模型型態可覆蓋評估指標/門檻：分類用 f1、迴歸（ts）用 rmse。
+    # conf/model/<name>.yaml 的 evaluation 區段覆蓋 conf/train 的全域預設，
+    # 避免對迴歸模型套用 f1 門檻而誤判「找不到主指標」。
+    model_eval = cfg.get("model", {}).get("evaluation")
+    if model_eval:
+        train_cfg = {
+            **train_cfg,
+            "evaluation": {**train_cfg.get("evaluation", {}), **model_eval},
+        }
 
     with mlflow.start_run(run_name=f"train-{model_name}") as run:
         # 委派模型專屬訓練；回傳指標、signature、可 log 的模型物件。

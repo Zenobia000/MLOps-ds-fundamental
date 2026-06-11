@@ -9,6 +9,11 @@
 name: lstm
 task: regression
 
+# 迴歸任務的品質門檻：用 rmse（越小越好）取代分類的 f1，覆蓋 conf/train 全域預設。
+evaluation:
+  primary_metric: rmse
+  min_threshold: 2.0          # rmse ≤ 2.0 視為通過（toy 需求序列尺度下合理）
+
 params:
   input_size: 1               # 單變量需求序列
   hidden_size: 64
