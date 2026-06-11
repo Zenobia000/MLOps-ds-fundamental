@@ -2,7 +2,7 @@
 # dvc.yaml — 資料 / 訓練端到端管線（reproducible pipeline）
 # -----------------------------------------------------------------------------
 # 階段：prepare → features → train → evaluate
-# 各階段 cmd 指向 src 模組（python -m）；deps/outs/params 讓 DVC 算出 DAG，
+# 各階段 cmd 指向 src 模組（python3 -m）；deps/outs/params 讓 DVC 算出 DAG，
 # 只重跑受變更影響的階段。執行：`dvc repro`（或 `make pipeline`）。
 # 註：以結構化+時序（XGBoost 預測維護）為主線示範；vision/ts 為平行支線，
 #     由各自 train 指令觸發，不在此預設管線內以保持教學聚焦。
@@ -11,7 +11,7 @@
 stages:
   # --- 1. 資料清洗與切分 -----------------------------------------------------
   prepare:
-    cmd: python -m src.data.prepare
+    cmd: python3 -m src.data.prepare
     deps:
       - src/data/prepare.py
       - ${prepare.source}
@@ -24,9 +24,9 @@ stages:
       - data/interim/val.parquet
       - data/interim/test.parquet
 
-  # --- 2. 特徵工程（滾動統計 / lag 特徵）-----------------------------------
+  # --- 2. 特徵工程（滾動統計）-----------------------------------------------
   features:
-    cmd: python -m src.features.build_features
+    cmd: python3 -m src.features.build_features
     deps:
       - src/features/build_features.py
       - data/interim/train.parquet
@@ -36,37 +36,29 @@ stages:
       - features.rolling_window
       - features.add_rolling_mean
       - features.add_rolling_std
-      - features.add_lag_features
-      - features.lags
     outs:
       - data/processed/train_features.parquet
       - data/processed/val_features.parquet
       - data/processed/test_features.parquet
 
-  # --- 3. 訓練（MLflow logging 在 src 端進行）-------------------------------
+  # --- 3. 訓練（MLflow logging 在 src 端進行，模型存 models/tabular）---------
   train:
-    cmd: python -m src.training.train model=xgboost data=sensors
+    cmd: python3 -m src.training.train model=xgboost data=sensors
     deps:
       - src/training/train.py
+      - src/training/_trainers.py
       - src/models/tabular
       - data/processed/train_features.parquet
       - data/processed/val_features.parquet
-    params:
-      - train.model
-      - train.max_depth
-      - train.learning_rate
-      - train.n_estimators
-      - train.subsample
-      - train.random_state
     outs:
-      - models/xgboost_maintenance.json
+      - models/tabular/model.xgb
 
   # --- 4. 評估與品質門檻 -----------------------------------------------------
   evaluate:
-    cmd: python -m src.training.evaluate
+    cmd: python3 -m src.training.evaluate
     deps:
       - src/training/evaluate.py
-      - models/xgboost_maintenance.json
+      - models/tabular/model.xgb
       - data/processed/test_features.parquet
     params:
       - evaluate.primary_metric

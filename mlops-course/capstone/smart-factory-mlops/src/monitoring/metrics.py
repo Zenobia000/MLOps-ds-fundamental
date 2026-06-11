@@ -15,9 +15,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from contextlib import contextmanager
 from time import perf_counter
-from typing import Iterator
 
 try:  # pragma: no cover - 取決於安裝版本
     from prometheus_client import (
@@ -40,7 +40,7 @@ except Exception as exc:  # noqa: BLE001
 _LATENCY_BUCKETS = (0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0)
 
 
-def build_registry() -> "CollectorRegistry":
+def build_registry() -> CollectorRegistry:
     """建立一個全新的 Prometheus registry。
 
     每個服務實例（或測試案例）使用獨立 registry，避免全域 ``REGISTRY``
@@ -72,7 +72,7 @@ class PredictionMetrics:
 
     def __init__(
         self,
-        registry: "CollectorRegistry",
+        registry: CollectorRegistry,
         namespace: str = "smartfactory",
         prediction_buckets: tuple[float, ...] | None = None,
     ) -> None:

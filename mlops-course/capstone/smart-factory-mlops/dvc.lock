@@ -1,0 +1,121 @@
+schema: '2.0'
+stages:
+  prepare:
+    cmd: python3 -m src.data.prepare
+    deps:
+    - path: ../../datasets/toy_sensors.csv
+      hash: md5
+      md5: 64c93b0bc4f235c607573761027de8e6
+      size: 39290
+    - path: src/data/prepare.py
+      hash: md5
+      md5: 4eb1efa87b024b48aeef4d7a76af7b4c
+      size: 1977
+    params:
+      params.yaml:
+        prepare.split_strategy: temporal
+        prepare.test_size: 0.2
+        prepare.val_size: 0.1
+    outs:
+    - path: data/interim/test.parquet
+      hash: md5
+      md5: af858edadd85aaf802b498ed82dc3b30
+      size: 7897
+    - path: data/interim/train.parquet
+      hash: md5
+      md5: fb539a4a0c140068623477b1a6b2956a
+      size: 15385
+    - path: data/interim/val.parquet
+      hash: md5
+      md5: d84493729774aef52a2ffd9a32b99dc2
+      size: 6166
+  features:
+    cmd: python3 -m src.features.build_features
+    deps:
+    - path: data/interim/test.parquet
+      hash: md5
+      md5: af858edadd85aaf802b498ed82dc3b30
+      size: 7897
+    - path: data/interim/train.parquet
+      hash: md5
+      md5: fb539a4a0c140068623477b1a6b2956a
+      size: 15385
+    - path: data/interim/val.parquet
+      hash: md5
+      md5: d84493729774aef52a2ffd9a32b99dc2
+      size: 6166
+    - path: src/features/build_features.py
+      hash: md5
+      md5: 0f8a4dc6c37e264e1a02d84aa3f9634e
+      size: 5012
+    params:
+      params.yaml:
+        features.add_rolling_mean: true
+        features.add_rolling_std: true
+        features.rolling_window: 6
+    outs:
+    - path: data/processed/test_features.parquet
+      hash: md5
+      md5: 9ab86ee4daab58ffdd5b72a3c4639784
+      size: 15326
+    - path: data/processed/train_features.parquet
+      hash: md5
+      md5: 676c97e1ccf65f174bed98ab221785ad
+      size: 34712
+    - path: data/processed/val_features.parquet
+      hash: md5
+      md5: 30218fa9f8defbb83492e503f25f8e8c
+      size: 11087
+  train:
+    cmd: python3 -m src.training.train model=xgboost data=sensors
+    deps:
+    - path: data/processed/train_features.parquet
+      hash: md5
+      md5: 676c97e1ccf65f174bed98ab221785ad
+      size: 34712
+    - path: data/processed/val_features.parquet
+      hash: md5
+      md5: 30218fa9f8defbb83492e503f25f8e8c
+      size: 11087
+    - path: src/models/tabular
+      hash: md5
+      md5: 8efb579ffc4c452f168e0adbfb67c258.dir
+      size: 10782
+      nfiles: 4
+    - path: src/training/_trainers.py
+      hash: md5
+      md5: 59035b972826d16a3bd9520bb1e87e22
+      size: 8141
+    - path: src/training/train.py
+      hash: md5
+      md5: 2232e884f736608a6c596802abeca5c5
+      size: 4666
+    outs:
+    - path: models/tabular/model.xgb
+      hash: md5
+      md5: 308f7b3f4410745d7886df9d0ea965b9
+      size: 495776
+  evaluate:
+    cmd: python3 -m src.training.evaluate
+    deps:
+    - path: data/processed/test_features.parquet
+      hash: md5
+      md5: 9ab86ee4daab58ffdd5b72a3c4639784
+      size: 15326
+    - path: models/tabular/model.xgb
+      hash: md5
+      md5: 308f7b3f4410745d7886df9d0ea965b9
+      size: 495776
+    - path: src/training/evaluate.py
+      hash: md5
+      md5: 6d49bfd47f9e72c951b343348a1d92e4
+      size: 5222
+    params:
+      params.yaml:
+        evaluate.min_threshold: 0.7
+        evaluate.primary_metric: f1
+    outs:
+    - path: reports/metrics.json
+      hash: md5
+      md5: 67ae50f0430f8ff2c8a24961038bee94
+      size: 202

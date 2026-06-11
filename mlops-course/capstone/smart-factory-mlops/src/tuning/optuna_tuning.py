@@ -14,8 +14,9 @@
 from __future__ import annotations
 
 import argparse
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 import optuna
 import yaml
@@ -67,9 +68,7 @@ def _build_pruner(pruner_cfg: Mapping[str, Any]) -> optuna.pruners.BasePruner:
     """依設定建立 pruner（median / hyperband / nop）。"""
     name = str(pruner_cfg.get("name", "median")).lower()
     if name == "median":
-        return optuna.pruners.MedianPruner(
-            n_warmup_steps=int(pruner_cfg.get("n_warmup_steps", 5))
-        )
+        return optuna.pruners.MedianPruner(n_warmup_steps=int(pruner_cfg.get("n_warmup_steps", 5)))
     if name == "hyperband":
         return optuna.pruners.HyperbandPruner(
             min_resource=int(pruner_cfg.get("min_resource", 1)),
@@ -141,13 +140,24 @@ def run_study(cfg: Mapping[str, Any]) -> optuna.Study:
 
 
 def main() -> None:
-    """CLI 進入點：對指定（或 active）模型做 HPO。"""
+    """CLI 進入點：對指定（或 active）模型做 HPO。
+
+    支援 ``--model xgboost`` 與 Hydra 風格 ``model=xgboost data=sensors``
+    （與 src.training.train 一致，Makefile 採後者）。
+    """
     parser = argparse.ArgumentParser(description="Smart Factory Optuna 調參")
     parser.add_argument("--model", default=None, help="覆蓋 active_model（xgboost/lstm/resnet）")
-    args = parser.parse_args()
+    args, extras = parser.parse_known_args()
 
-    overrides = {"active_model": args.model} if args.model else None
-    cfg = load_config(overrides=overrides)
+    overrides: dict[str, Any] = {}
+    for token in extras:
+        if "=" in token and not token.startswith("-"):
+            key, value = token.split("=", 1)
+            overrides[key.strip()] = value.strip()
+    if args.model:
+        overrides["model"] = args.model
+
+    cfg = load_config(overrides=overrides or None)
     run_study(cfg)
 
 

@@ -17,9 +17,10 @@ preset 移至 ``evidently.metric_preset``）；更舊版本則位於不同路徑
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any
 
 import pandas as pd
 
@@ -27,15 +28,15 @@ import pandas as pd
 # 新版（>= 0.4）：evidently.report.Report + evidently.metric_preset.DataDriftPreset
 # 舊版（< 0.4）：evidently.report.Report 仍在，但 preset 路徑可能不同。
 try:  # pragma: no cover - 取決於安裝版本
-    from evidently.report import Report
     from evidently.metric_preset import DataDriftPreset
+    from evidently.report import Report
 
     _EVIDENTLY_AVAILABLE = True
     _IMPORT_ERROR: Exception | None = None
 except Exception as exc_new:  # noqa: BLE001 - 嘗試更舊路徑
     try:  # pragma: no cover
-        from evidently.report import Report  # type: ignore
         from evidently.metric_preset.data_drift import DataDriftPreset  # type: ignore
+        from evidently.report import Report  # type: ignore
 
         _EVIDENTLY_AVAILABLE = True
         _IMPORT_ERROR = None
@@ -152,3 +153,40 @@ def _extract_summary(report: Any) -> dict[str, Any]:
         "share_drifted": share,
         "by_column": by_column,
     }
+
+
+def main() -> None:
+    """CLI 進入點（`make monitor` / `python -m src.monitoring.drift`）。
+
+    示範用感測器資料做漂移偵測：以時間前半為 reference、後半為 current，
+    並對 current 注入人工漂移（溫度偏移 + 振動放大），讓 Evidently 偵測到，
+    產出 HTML 報告並印出結構化摘要。實務上 current 應換成真實線上資料。
+    """
+    from src.data.loaders import load_sensors
+    from src.utils.logging import get_logger
+
+    logger = get_logger(__name__)
+    features = ["temperature", "vibration", "current"]
+
+    df = load_sensors()  # 無 config 時後援到課程共用玩具資料
+    mid = len(df) // 2
+    reference = df.iloc[:mid].copy()
+    current = df.iloc[mid:].copy()
+    # 注入人工漂移，示範偵測（covariate + scale drift）。
+    current["temperature"] = current["temperature"] + 8.0
+    current["vibration"] = current["vibration"] * 1.5
+
+    out_path = Path("monitoring/reports/data_drift.html")
+    result = run_data_drift(reference, current, columns=features, report_path=out_path)
+    logger.info(
+        "資料漂移：dataset_drift=%s，漂移特徵 %d/%d（%.0f%%），報告=%s",
+        result.dataset_drift,
+        result.n_drifted_features,
+        len(features),
+        result.share_drifted_features * 100,
+        result.report_path,
+    )
+
+
+if __name__ == "__main__":
+    main()

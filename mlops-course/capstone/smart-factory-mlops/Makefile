@@ -9,6 +9,9 @@
 .DEFAULT_GOAL := help
 SHELL := /bin/bash
 
+# Python 直譯器；可用 `make train-tabular PYTHON=python` 覆蓋（預設 python3）。
+PYTHON ?= python3
+
 # 允許用 `make train-tabular ARGS="model=xgboost"` 傳額外參數給 python 模組。
 ARGS ?=
 
@@ -25,19 +28,19 @@ feast-apply:  ## 套用 Feast 特徵定義（建立/更新 feature views）
 	cd feature_repo && feast apply
 
 train-tabular:  ## 訓練 XGBoost 預測性維護模型（結構化+時序）
-	python -m src.training.train model=xgboost data=sensors $(ARGS)
+	$(PYTHON) -m src.training.train model=xgboost data=sensors $(ARGS)
 
 train-ts:  ## 訓練 LSTM 產能需求預測模型（時序）
-	python -m src.training.train model=lstm data=demand $(ARGS)
+	$(PYTHON) -m src.training.train model=lstm data=demand $(ARGS)
 
 train-vision:  ## 訓練 ResNet 瑕疵檢測模型並匯出 ONNX（影像）
-	python -m src.training.train model=resnet data=images $(ARGS)
+	$(PYTHON) -m src.training.train model=resnet data=images $(ARGS)
 
 tune:  ## 用 Optuna 自動調參（預設 xgboost，可用 ARGS="model=resnet"）
-	python -m src.tuning.optimize model=xgboost $(ARGS)
+	$(PYTHON) -m src.tuning.optuna_tuning model=xgboost $(ARGS)
 
 serve:  ## 啟動 BentoML 推論服務（表格 + 影像雙模型 API）
-	bentoml serve services.service:svc --reload
+	bentoml serve services.service:SmartFactoryService --reload
 
 test:  ## 跑全部測試並輸出覆蓋率
 	pytest --cov=src --cov-report=term-missing
@@ -47,7 +50,7 @@ lint:  ## 執行 ruff + black 檢查（不改檔）
 	black --check src tests
 
 monitor:  ## 產出 Evidently 漂移報告
-	python -m src.monitoring.drift_report
+	$(PYTHON) -m src.monitoring.drift
 
 pipeline:  ## 重跑 DVC 端到端管線（prepare→features→train→evaluate）
 	dvc repro

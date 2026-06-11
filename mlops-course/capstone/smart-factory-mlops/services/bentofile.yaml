@@ -4,7 +4,7 @@
 # 容器化（產出 OCI image）：
 #   bentoml containerize smart_factory:latest
 
-service: "services.service:svc"        # service 進入點：模組:Service 物件
+service: "services.service:SmartFactoryService"   # @bentoml.service 類別進入點
 name: "smart_factory"
 description: "智慧工廠 MLOps：預測性維護（XGBoost）+ 視覺瑕疵檢測（ONNX ResNet）統一 API"
 labels:

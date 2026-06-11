@@ -28,6 +28,12 @@ htmlcov/
 mlruns/
 mlartifacts/
 
+# --- 監控報告產物（make monitor 產出的 Evidently HTML）-----------------------
+monitoring/reports/
+
+# --- DVC pipeline 產物（reports/metrics.json 由 evaluate 階段產生）------------
+reports/
+
 # --- 模型產物（DVC / registry 管理）-----------------------------------------
 # 注意：用 /models/ 錨定根目錄，否則會誤殺原始碼 src/models/。
 /models/
