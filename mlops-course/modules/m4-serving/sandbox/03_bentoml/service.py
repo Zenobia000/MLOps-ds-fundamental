@@ -51,6 +51,21 @@ def save_model_to_store() -> None:
     print(f"模型已存入 BentoML Model Store: {saved.tag}")
 
 
+def _ensure_model() -> "bentoml.Model":
+    """確保 Model Store 內有模型;不存在就現訓現存。
+
+    為什麼需要這個:class 屬性 ``bento_model = bentoml.models.get(...)`` 會在
+    「class 定義時(即 import 時)」就執行,早於 ``__main__`` 的存模型。若 store
+    內還沒有模型,import / serve 都會直接 NotFound 崩潰。這裡讓服務「自我 bootstrap」:
+    第一次起服務若沒模型,就自動建立,學生不必先手動跑一次存模型。
+    """
+    try:
+        return bentoml.models.get(f"{MODEL_NAME}:latest")
+    except bentoml.exceptions.NotFound:
+        save_model_to_store()
+        return bentoml.models.get(f"{MODEL_NAME}:latest")
+
+
 @bentoml.service(
     name="iris_classifier",
     # resources/traffic 是 BentoML 的「服務描述」,FastAPI 沒有這層抽象。
@@ -61,7 +76,8 @@ class IrisClassifier:
     """一個 BentoML service:啟動時從 Model Store 載入最新版 iris 模型。"""
 
     # 在 class 屬性宣告「我要用哪個模型」,BentoML 啟動時自動注入。
-    bento_model = bentoml.models.get(f"{MODEL_NAME}:latest")
+    # 用 _ensure_model() 而非裸 get：store 內沒有時自動建立,避免 import/serve 崩潰。
+    bento_model = _ensure_model()
 
     def __init__(self) -> None:
         # 把存好的模型載成可呼叫的 runner/物件

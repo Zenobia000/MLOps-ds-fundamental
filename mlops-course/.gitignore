@@ -48,10 +48,15 @@ dvc-remote/
 *.pkl
 *.joblib
 *.onnx
+*.onnx.data
 *.pt
 *.pth
 *.h5
 *.ckpt
+
+# ── Evidently（m6）漂移報告 HTML 產物 ──────────────────────────
+*_report.html
+drift_report.html
 
 # ── Feast（m3）本地 registry / online store 產物 ──────────────
 *registry.db

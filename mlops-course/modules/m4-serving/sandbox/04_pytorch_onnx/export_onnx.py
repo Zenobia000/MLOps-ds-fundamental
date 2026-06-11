@@ -57,6 +57,10 @@ def export_to_onnx(model: nn.Module) -> None:
         # 把 batch 維(第 0 維)設為動態,服務時才能一次吃多筆(dynamic batching)
         dynamic_axes={"input": {0: "batch"}, "logits": {0: "batch"}},
         opset_version=17,
+        # 用傳統 TorchScript exporter:它輸出的 ONNX 與 onnxruntime 的動態量化
+        # (quantize_dynamic 內部會跑 shape inference)相容;torch 2.x 預設的
+        # dynamo exporter 輸出在某些算子上會讓量化的 shape inference 失敗。
+        dynamo=False,
     )
     print(f"已匯出 ONNX: {ONNX_PATH}")
 
