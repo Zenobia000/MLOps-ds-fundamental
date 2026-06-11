@@ -56,6 +56,10 @@ Layer 3 完整專案     capstone/                生產級完整骨架，最後
 
 > 完整逐節大綱（學習目標／核心觀念／Lab／對應趨勢）見 [`docs/mlops-course-outline.md`](./docs/mlops-course-outline.md)。
 
+<p align="center">
+  <img src="./docs/assets/mlops-learning-path.png" alt="MLOps 工具學習路徑：Python · Git → MLflow · Optuna · DVC → Feast → Docker · FastAPI · BentoML · PyTorch → Prefect · GitHub Actions → Evidently，沿技能階梯一階一工具串成一條流程" width="100%">
+</p>
+
 ---
 
 ## 倉庫結構
