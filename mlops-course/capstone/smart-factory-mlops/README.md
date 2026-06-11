@@ -126,6 +126,50 @@ make lint
 
 ---
 
+## 5b. 實測指令與預期輸出（已驗證）
+
+> 以下為在乾淨環境實際執行各 `make` target 的輸出摘要（玩具資料 smoke）。
+> MLflow 預設用本地 `sqlite:///mlflow.db`（免啟 server）；產物（mlruns/、models/、
+> *.parquet、mlflow.db）皆 gitignore。**11/11 target 全數驗證通過。**
+
+| 指令 | 結果 | 關鍵輸出 |
+| :--- | :--- | :--- |
+| `make train-tabular` | ✅ | `f1=0.737 roc_auc=0.919 aucpr=0.849`；品質門檻 **通過**；存 `models/tabular/model.xgb` |
+| `make train-ts` | ✅ | LSTM；`rmse=0.708`（gate 用 rmse≤2.0）**通過**；存 `models/timeseries/lstm.pt` |
+| `make train-vision` | ✅ | ResNet 微調 smoke + ONNX 匯出（opset 17）；存 `models/vision/model.onnx` |
+| `make tune` | ✅ | Optuna 30 trials；`best_value≈0.874`（PR-AUC） |
+| `make pipeline` | ✅ | `dvc repro` 跑完 prepare→features→train→evaluate；二次跑顯示 *up to date* |
+| `make serve` | ✅ | `bentoml serve`；`POST /healthz` → 200、`POST /predict_maintenance` → 200 |
+| `make monitor` | ✅ | Evidently 漂移報告 `dataset_drift=True`（2/3 特徵漂移） |
+| `make feast-apply` | ✅ | 建立 entity / feature view / feature service |
+| `make test` | ✅ | `26 passed` |
+| `make lint` | ✅ | ruff + black 全綠 |
+| `make up` | ✅* | `docker compose config` 驗證通過（*未實際啟動全棧） |
+
+**`make train-tabular` 實際輸出（節錄）**
+```
+src.training.evaluate | 品質門檻：f1=0.7368 vs 門檻 0.7000（maximize）→ 通過
+__main__ | metrics={'accuracy':0.867,'precision':0.778,'recall':0.70,
+                    'f1':0.737,'roc_auc':0.919,'aucpr':0.849}
+```
+
+**`make serve` 實測（另一個終端機）**
+```bash
+curl -X POST http://localhost:3000/predict_maintenance -H 'Content-Type: application/json' \
+  -d '{"request":{"readings":[{"machine_id":"machine_01","temperature":92,"vibration":5.2,"current":12.5},
+                              {"machine_id":"machine_02","temperature":56,"vibration":2.0,"current":10.1}]}}'
+# → HTTP 200
+# {"model_name":"smart_factory_tabular","model_version":"local","threshold":0.5,
+#  "predictions":[{"machine_id":"machine_01","failure_probability":0.994,"will_fail":true},
+#                 {"machine_id":"machine_02","failure_probability":0.0001,"will_fail":false}]}
+```
+
+> 依賴：`make train-*` / `tune` 需 `pip install -e .`（含 mlflow/optuna/dvc/xgboost）；
+> `train-vision` 另需 torch+torchvision+onnx+onnxscript；`serve` 需 bentoml+pillow；
+> `monitor` 需 evidently；`pipeline` 需 dvc（`dvc init` 已完成）。
+
+---
+
 ## 6. 資料夾導覽
 
 ```
