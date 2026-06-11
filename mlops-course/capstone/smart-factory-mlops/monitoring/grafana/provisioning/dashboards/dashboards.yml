@@ -1,0 +1,16 @@
+# Grafana dashboard provisioning：啟動時自動載入此資料夾內的 dashboard JSON。
+# 被 docker-compose 掛載到 /etc/grafana/provisioning/dashboards/；本檔與
+# smart-factory.json 同層，Grafana 會自動匯入。
+apiVersion: 1
+
+providers:
+  - name: smart-factory
+    orgId: 1
+    folder: "Smart Factory"
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/provisioning/dashboards
+      foldersFromFilesStructure: false

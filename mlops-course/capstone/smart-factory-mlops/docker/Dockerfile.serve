@@ -59,4 +59,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
     CMD curl -fsS "http://localhost:${PORT}/healthz" || exit 1
 
 # 以 BentoML 啟動統一服務；production_mode 多 worker 由 BentoML 管理
-CMD ["bentoml", "serve", "services.service:svc", "--host", "0.0.0.0", "--port", "3000"]
+CMD ["bentoml", "serve", "services.service:SmartFactoryService", "--host", "0.0.0.0", "--port", "3000"]

@@ -1,0 +1,21 @@
+# =============================================================================
+# prometheus.yml — Prometheus 抓取設定（被 docker-compose 掛載到
+# /etc/prometheus/prometheus.yml）。
+# 抓兩個目標：Prometheus 自身、以及本服務 serve 的 /metrics（BentoML 內建
+# Prometheus 指標 + src/monitoring/metrics.py 的自訂指標）。
+# 告警規則範例見同層 prometheus_rules.yml（如需啟用，另行掛載並在此 rule_files 引用）。
+# =============================================================================
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  - job_name: smart-factory-serve
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["serve:3000"] # compose 網路內以服務名解析
