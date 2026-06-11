@@ -21,9 +21,10 @@ from __future__ import annotations
 
 import os
 import re
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 import yaml
 
@@ -38,6 +39,7 @@ _ENV_PATTERN = re.compile(r"\$\{oc\.env:([^,}]+)(?:,([^}]*))?\}")
 def _interpolate_env(value: Any) -> Any:
     """遞迴解析設定值中的 ``${oc.env:VAR,default}`` 環境變數插值。"""
     if isinstance(value, str):
+
         def _sub(match: re.Match[str]) -> str:
             var, default = match.group(1), match.group(2)
             return os.environ.get(var.strip(), (default or "").strip())
@@ -89,10 +91,21 @@ def load_config(
     global _CONF_DIR
     base_dir = Path(conf_dir) if conf_dir else _CONF_DIR
     root = _read_yaml(base_dir / "config.yaml")
-    if overrides:
-        root = {**root, **dict(overrides)}
 
-    defaults = root.get("defaults", {}) or {}
+    overrides = dict(overrides or {})
+    # 群組選擇器（data/model/train）單獨抽出：它們選「載哪個子設定檔」，
+    # 不應直接併進 root 純量。其餘 key（active_model / seed…）為 root 層覆蓋。
+    group_keys = {"data", "model", "train"}
+    group_over = {k: overrides.pop(k) for k in list(overrides) if k in group_keys}
+    root = {**root, **overrides}
+
+    defaults = dict(root.get("defaults", {}) or {})
+    # `model=` 覆蓋等同切換 active_model（切模型只需一個鍵）。
+    if "model" in group_over:
+        root["active_model"] = group_over["model"]
+
+    data_name = group_over.get("data") or defaults.get("data")
+    train_name = group_over.get("train") or defaults.get("train") or "default"
     # active_model 優先於 defaults.model，確保「切模型只改 active_model」成立。
     model_name = root.get("active_model") or defaults.get("model")
 
@@ -102,9 +115,9 @@ def load_config(
     try:
         merged: dict[str, Any] = {
             **root,
-            "data": _load_group("data", defaults.get("data")),
+            "data": _load_group("data", data_name),
             "model": _load_group("model", model_name),
-            "train": _load_group("train", defaults.get("train") or "default"),
+            "train": _load_group("train", train_name),
         }
     finally:
         _CONF_DIR = prev_dir
@@ -128,7 +141,7 @@ class AppConfig:
     raw: Mapping[str, Any] = field(default_factory=dict)
 
     @classmethod
-    def from_dict(cls, cfg: Mapping[str, Any]) -> "AppConfig":
+    def from_dict(cls, cfg: Mapping[str, Any]) -> AppConfig:
         """從 :func:`load_config` 的 dict 建立型別化設定。"""
         return cls(
             project=str(cfg["project"]),

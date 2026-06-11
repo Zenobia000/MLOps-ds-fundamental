@@ -12,7 +12,9 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Mapping, Optional
+from collections.abc import Mapping
+from pathlib import Path
+from typing import Any
 
 import pandas as pd
 
@@ -32,7 +34,7 @@ FEATURE_VIEW_COLUMNS: list[str] = [
 
 def build_sensor_features(
     df: pd.DataFrame,
-    config: Optional[Mapping[str, Any]] = None,
+    config: Mapping[str, Any] | None = None,
     *,
     window: int = 3,
 ) -> pd.DataFrame:
@@ -77,7 +79,7 @@ def build_sensor_features(
         temp_prev = g["temperature"].shift(1)
         vib_prev = g["vibration"].shift(1)
         cur_prev = g["current"].shift(1)
-        roll = dict(window=window, min_periods=1)
+        roll = {"window": window, "min_periods": 1}
         g["temp_roll_mean"] = temp_prev.rolling(**roll).mean()
         g["vib_roll_std"] = vib_prev.rolling(**roll).std()
         g["current_roll_mean"] = cur_prev.rolling(**roll).mean()
@@ -85,9 +87,7 @@ def build_sensor_features(
         g["temp_delta"] = g["temperature"].diff()
         return g
 
-    out = out.groupby(entity, group_keys=False)[list(out.columns)].apply(
-        _per_machine
-    )
+    out = out.groupby(entity, group_keys=False)[list(out.columns)].apply(_per_machine)
 
     # 視窗起點與單點 std 會產生 NaN，補 0 視為「尚無歷史」的中性值。
     out[FEATURE_VIEW_COLUMNS] = out[FEATURE_VIEW_COLUMNS].fillna(0.0)
@@ -99,3 +99,34 @@ def build_sensor_features(
         len(out),
     )
     return out
+
+
+def main() -> None:
+    """DVC pipeline stage 2：對 interim 各切分檔造特徵。
+
+    讀 ``params.yaml`` 的 ``features.rolling_window``，對 ``data/interim`` 的
+    train/val/test 套用 :func:`build_sensor_features`，寫出
+    ``data/processed/<split>_features.parquet``。供 ``dvc.yaml`` 的 features 階段呼叫。
+    """
+    import yaml
+
+    root = Path(__file__).resolve().parents[2]
+    with (root / "params.yaml").open(encoding="utf-8") as fh:
+        feat_params = (yaml.safe_load(fh) or {}).get("features", {})
+    window = int(feat_params.get("rolling_window", 3))
+
+    interim = root / "data" / "interim"
+    processed = root / "data" / "processed"
+    processed.mkdir(parents=True, exist_ok=True)
+
+    for split in ("train", "val", "test"):
+        src = interim / f"{split}.parquet"
+        if not src.exists():
+            raise FileNotFoundError(f"缺少 prepare 階段輸出：{src}（請先跑 prepare 階段）")
+        feats = build_sensor_features(pd.read_parquet(src), window=window)
+        feats.to_parquet(processed / f"{split}_features.parquet", index=False)
+        logger.info("features 完成：%s（%d 列）→ %s", split, len(feats), processed)
+
+
+if __name__ == "__main__":
+    main()

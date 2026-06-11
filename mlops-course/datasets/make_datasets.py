@@ -103,10 +103,15 @@ def make_toy_sensors(n_machines: int = 5, n_steps: int = 150) -> Path:
             vibration = base_vib[m] + rng.normal(0, 0.3)
             current = base_cur[m] + rng.normal(0, 0.5)
 
-            # 故障機率：溫度與振動越高越容易故障（直白的線性關係 + sigmoid）
-            risk = 0.15 * (temperature - 60) + 0.8 * (vibration - 2.5)
+            # 故障機率：溫度與振動的「絕對值」越高越危險，且兩者同時偏高有加乘
+            # 效應（交互項）。係數刻意調得讓 temperature / vibration 能「直接」預測
+            # failure（模型 roc_auc≈0.9），確保這是一份「學得起來」的教學資料；
+            # offset 控制故障維持在約 1/4 的少數類。
+            t_excess = temperature - 60.0
+            v_excess = vibration - 2.5
+            risk = 0.8 * t_excess + 3.0 * v_excess + 0.6 * t_excess * v_excess - 3.4
             prob = 1.0 / (1.0 + np.exp(-risk))  # sigmoid 壓到 0~1
-            failure = int(rng.random() < prob * 0.3)  # 乘 0.3 讓故障維持少數類
+            failure = int(rng.random() < prob)
 
             rows.append(
                 {

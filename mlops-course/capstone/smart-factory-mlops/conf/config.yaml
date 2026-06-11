@@ -20,9 +20,14 @@ paths:
   data_external: data/external  # 外部資料（C-MAPSS / MVTec AD）
   models: models                # 本地模型產物（DVC / registry 管理，gitignore）
 
-# MLflow 實驗追蹤；tracking_uri 可被環境變數 MLFLOW_TRACKING_URI 覆蓋。
+# MLflow 實驗追蹤。
+# 預設用本地 sqlite backend（MLflow 3.x 推薦的本地後端；file store 已進入維護模式），
+# 讓 `make train-tabular` 免啟動 server 即可跑；artifacts 預設落 ./mlartifacts。
+# 用 `mlflow ui --backend-store-uri sqlite:///mlflow.db` 檢視。
+# 正式環境設環境變數 MLFLOW_TRACKING_URI=http://<server>:5000（或 `make up` 起
+# docker-compose 的 MLflow server）即覆蓋此預設。
 mlflow:
-  tracking_uri: ${oc.env:MLFLOW_TRACKING_URI,http://localhost:5000}
+  tracking_uri: ${oc.env:MLFLOW_TRACKING_URI,sqlite:///mlflow.db}
   experiment: smart-factory
 
 # 目前啟用的模型；對應 conf/model/<name>.yaml。

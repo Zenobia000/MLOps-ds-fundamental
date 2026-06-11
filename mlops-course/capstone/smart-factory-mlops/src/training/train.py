@@ -16,7 +16,8 @@
 from __future__ import annotations
 
 import argparse
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from src.training._trainers import TrainArtifacts, train_one
 from src.training.evaluate import quality_gate
@@ -38,9 +39,7 @@ def _setup_mlflow(cfg: Mapping[str, Any]):
     return mlflow
 
 
-def _register_and_alias(
-    mlflow, model_info, art: TrainArtifacts, cfg: Mapping[str, Any]
-) -> None:
+def _register_and_alias(mlflow, model_info, art: TrainArtifacts, cfg: Mapping[str, Any]) -> None:
     """把模型註冊進 registry 並打 alias（champion）。失敗不致命，只記錄警告。"""
     registry_name = f"{cfg.get('project', 'smart-factory')}-{art.model_name}"
     try:
@@ -87,17 +86,30 @@ def run(cfg: Mapping[str, Any]) -> TrainArtifacts:
 
 
 def main() -> None:
-    """CLI 進入點：解析 --model 覆蓋後執行訓練。"""
+    """CLI 進入點：支援兩種覆蓋語法後執行訓練。
+
+    - ``--model xgboost``：旗標式，覆蓋 active_model。
+    - ``model=xgboost data=sensors``：Hydra 風格 key=value（Makefile 採此式），
+      支援切換 model / data / train 群組。
+    """
     parser = argparse.ArgumentParser(description="Smart Factory 通用訓練入口")
     parser.add_argument(
         "--model",
         default=None,
         help="覆蓋 conf/config.yaml 的 active_model（xgboost / lstm / resnet）",
     )
-    args = parser.parse_args()
+    args, extras = parser.parse_known_args()
 
-    overrides = {"active_model": args.model} if args.model else None
-    cfg = load_config(overrides=overrides)
+    # 解析 Hydra 風格的 `key=value` 覆蓋（如 `model=xgboost data=sensors`）。
+    overrides: dict[str, Any] = {}
+    for token in extras:
+        if "=" in token and not token.startswith("-"):
+            key, value = token.split("=", 1)
+            overrides[key.strip()] = value.strip()
+    if args.model:
+        overrides["model"] = args.model
+
+    cfg = load_config(overrides=overrides or None)
     run(cfg)
 
 

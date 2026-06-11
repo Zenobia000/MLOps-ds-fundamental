@@ -10,17 +10,20 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Mapping
+from typing import Any
 
 import numpy as np
 
 from src.data.loaders import load_demand, load_sensors
-from src.models.tabular import XGBoostMaintenanceModel
-from src.models.timeseries import LSTMForecaster, make_windows
 from src.training.evaluate import evaluate_classification, evaluate_regression
 from src.utils.logging import get_logger
+
+# 注意：各模型（XGBoost / LSTM / ResNet）的 import 一律「惰性」放在對應 trainer
+# 內，讓型態間依賴解耦——跑 train-tabular 不必裝 torch，跑 train-vision 不必裝
+# xgboost。共用的資料載入 / 評估 / logging 才在頂層 import。
 
 logger = get_logger(__name__)
 
@@ -61,15 +64,25 @@ def _artifact_logger(artifact: Path) -> Callable[..., Any]:
 def _train_xgboost(cfg: Mapping[str, Any]) -> TrainArtifacts:
     from mlflow.models.signature import infer_signature
 
+    from src.models.tabular import XGBoostMaintenanceModel  # 惰性：僅此線需要 xgboost
+
     model_cfg = cfg.get("model", {})
     data_cfg = cfg.get("data", {})
     features = list(data_cfg.get("feature_columns", ["temperature", "vibration", "current"]))
     target = str(data_cfg.get("target_column", "failure"))
 
     df = load_sensors(cfg)
+    # 全域時間切分（temporal holdout）：跨所有機台依 event_timestamp 排序，
+    # 尾段 test_size 當測試。load_sensors 預設依 machine_id 排序，若不在此重排，
+    # 尾段會整段落在單一機台，造成評估失真（f1≈0）。符合 sensors.yaml 的
+    # split.strategy=temporal，且避免未來資訊洩漏。
+    ts_col = str(data_cfg.get("timestamp_column", "event_timestamp"))
+    if ts_col in df.columns:
+        df = df.sort_values(ts_col).reset_index(drop=True)
+    test_size = float(data_cfg.get("split", {}).get("test_size", 0.2))
     X, y = df[features], df[target].to_numpy()
-    n_test = max(1, int(len(df) * 0.2))
-    X_train, X_test = X.iloc[:-n_test], X.iloc[-n_test:]  # 時序切分：尾段當測試
+    n_test = max(1, int(len(df) * test_size))
+    X_train, X_test = X.iloc[:-n_test], X.iloc[-n_test:]
     y_train, y_test = y[:-n_test], y[-n_test:]
 
     model = XGBoostMaintenanceModel(features, model_cfg.get("params")).fit(X_train, y_train)
@@ -91,6 +104,8 @@ def _train_xgboost(cfg: Mapping[str, Any]) -> TrainArtifacts:
 
 # ── LSTM：產能需求預測 ──────────────────────────────────────────────────────
 def _train_lstm(cfg: Mapping[str, Any]) -> TrainArtifacts:
+    from src.models.timeseries import LSTMForecaster, make_windows  # 惰性：僅此線需要 torch
+
     model_cfg = cfg.get("model", {})
     data_cfg = cfg.get("data", {})
     window = data_cfg.get("window", {})
@@ -168,7 +183,5 @@ _DISPATCH: dict[str, Callable[[Mapping[str, Any]], TrainArtifacts]] = {
 def train_one(model_name: str, cfg: Mapping[str, Any]) -> TrainArtifacts:
     """依模型名稱派發到對應 trainer。"""
     if model_name not in _DISPATCH:
-        raise ValueError(
-            f"未知的 active_model：{model_name}（可選 {list(_DISPATCH)}）"
-        )
+        raise ValueError(f"未知的 active_model：{model_name}（可選 {list(_DISPATCH)}）")
     return _DISPATCH[model_name](cfg)

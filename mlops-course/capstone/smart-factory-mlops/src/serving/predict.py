@@ -12,7 +12,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Sequence
+from collections.abc import Sequence
+from typing import Any
 
 import numpy as np
 
@@ -114,7 +115,7 @@ def predict_maintenance(
             failure_probability=float(p),
             will_fail=bool(p >= threshold),
         )
-        for r, p in zip(readings, proba)
+        for r, p in zip(readings, proba, strict=True)
     ]
 
 

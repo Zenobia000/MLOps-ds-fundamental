@@ -10,12 +10,17 @@
 
 from __future__ import annotations
 
+import json
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, Mapping
+from pathlib import Path
+from typing import Any
 
 import numpy as np
+import pandas as pd
 from sklearn.metrics import (
     accuracy_score,
+    average_precision_score,
     f1_score,
     mean_squared_error,
     precision_score,
@@ -59,9 +64,13 @@ def evaluate_classification(
         "recall": float(recall_score(y_true, y_pred, zero_division=0)),
         "f1": float(f1_score(y_true, y_pred, zero_division=0)),
     }
-    # ROC-AUC 需要兩個類別都出現，否則 sklearn 會報錯。
+    # ROC-AUC / PR-AUC 需要兩個類別都出現，否則 sklearn 會報錯。
+    # aucpr（PR-AUC = average precision）對不平衡的故障偵測比 roc_auc 更具鑑別力，
+    # 與 conf/model/xgboost.yaml 的 eval_metric 及 conf/hpo 的 metric=aucpr 對齊。
     if y_proba is not None and len(np.unique(y_true)) > 1:
-        metrics["roc_auc"] = float(roc_auc_score(y_true, np.asarray(y_proba).ravel()))
+        proba = np.asarray(y_proba).ravel()
+        metrics["roc_auc"] = float(roc_auc_score(y_true, proba))
+        metrics["aucpr"] = float(average_precision_score(y_true, proba))
     return metrics
 
 
@@ -106,3 +115,35 @@ def quality_gate(
         "通過" if passed else "未通過",
     )
     return GateResult(passed, metric, value, threshold, direction)
+
+
+def main() -> None:
+    """DVC pipeline stage 4：載入訓練好的模型，對 test 特徵評估，寫品質報告。
+
+    讀 ``data/processed/test_features.parquet`` 與 ``models/tabular`` 的模型，
+    計算分類指標與品質門檻，輸出 ``reports/metrics.json``（dvc metrics）。
+    """
+    from src.models.tabular import XGBoostMaintenanceModel
+    from src.utils.config import load_config
+
+    root = Path(__file__).resolve().parents[2]
+    test = pd.read_parquet(root / "data" / "processed" / "test_features.parquet")
+    model = XGBoostMaintenanceModel.load(root / "models" / "tabular")
+
+    proba = model.predict_proba(test)
+    y_true = test["failure"].to_numpy()
+    metrics = evaluate_classification(y_true, (proba >= 0.5).astype(int), proba)
+
+    gate = quality_gate(metrics, load_config().get("train", {}))
+    metrics["gate_passed"] = float(gate.passed)
+
+    reports = root / "reports"
+    reports.mkdir(parents=True, exist_ok=True)
+    (reports / "metrics.json").write_text(
+        json.dumps(metrics, indent=2, ensure_ascii=False), encoding="utf-8"
+    )
+    logger.info("evaluate 完成：%s → reports/metrics.json", metrics)
+
+
+if __name__ == "__main__":
+    main()

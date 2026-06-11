@@ -11,8 +11,9 @@ Feast 為選用依賴：未安裝時拋出清晰的 :class:`ImportError`，
 from __future__ import annotations
 
 import logging
+from collections.abc import Sequence
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional, Sequence
+from typing import TYPE_CHECKING
 
 import pandas as pd
 
@@ -29,14 +30,12 @@ _DEFAULT_REPO_PATH = _REPO_ROOT / "feature_repo"
 DEFAULT_FEATURE_SERVICE = "predictive_maintenance_v1"
 
 
-def _get_store(repo_path: Optional[str | Path] = None) -> "FeatureStore":
+def _get_store(repo_path: str | Path | None = None) -> FeatureStore:
     """建立並回傳 Feast :class:`FeatureStore`；缺套件時清晰報錯。"""
     try:
         from feast import FeatureStore
     except ImportError as exc:  # pragma: no cover - 依賴缺失路徑
-        raise ImportError(
-            "需要 feast 才能取數；請先 `pip install feast`。"
-        ) from exc
+        raise ImportError("需要 feast 才能取數；請先 `pip install feast`。") from exc
 
     path = Path(repo_path) if repo_path else _DEFAULT_REPO_PATH
     logger.info("初始化 Feast FeatureStore：%s", path)
@@ -45,10 +44,10 @@ def _get_store(repo_path: Optional[str | Path] = None) -> "FeatureStore":
 
 def get_historical_features(
     entity_df: pd.DataFrame,
-    features: Optional[Sequence[str]] = None,
+    features: Sequence[str] | None = None,
     *,
-    feature_service: Optional[str] = DEFAULT_FEATURE_SERVICE,
-    repo_path: Optional[str | Path] = None,
+    feature_service: str | None = DEFAULT_FEATURE_SERVICE,
+    repo_path: str | Path | None = None,
 ) -> pd.DataFrame:
     """取 point-in-time 正確的歷史特徵（離線訓練用）。
 
@@ -75,10 +74,10 @@ def get_historical_features(
 
 def get_online_features(
     entity_rows: Sequence[dict],
-    features: Optional[Sequence[str]] = None,
+    features: Sequence[str] | None = None,
     *,
-    feature_service: Optional[str] = DEFAULT_FEATURE_SERVICE,
-    repo_path: Optional[str | Path] = None,
+    feature_service: str | None = DEFAULT_FEATURE_SERVICE,
+    repo_path: str | Path | None = None,
 ) -> pd.DataFrame:
     """取最新線上特徵（低延遲推論用）。
 
@@ -96,7 +95,5 @@ def get_online_features(
         ref = list(features)
     else:
         ref = store.get_feature_service(feature_service)
-    response = store.get_online_features(
-        features=ref, entity_rows=list(entity_rows)
-    )
+    response = store.get_online_features(features=ref, entity_rows=list(entity_rows))
     return pd.DataFrame(response.to_dict())
