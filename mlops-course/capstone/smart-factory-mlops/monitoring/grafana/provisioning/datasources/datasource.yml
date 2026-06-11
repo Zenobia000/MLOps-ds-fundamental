@@ -1,0 +1,11 @@
+# Grafana datasource provisioning：啟動時自動接上 Prometheus（免手動設定）。
+# 被 docker-compose 掛載到 /etc/grafana/provisioning/datasources/。
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090 # compose 網路內以服務名解析
+    isDefault: true
+    editable: true

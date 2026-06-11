@@ -22,11 +22,11 @@ jobs:
     steps:
       # 步驟一：把你的程式碼 checkout 到 runner 上
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       # 步驟二：準備 Python 3.11 環境（與課程一致）
       - name: Set up Python 3.11
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
