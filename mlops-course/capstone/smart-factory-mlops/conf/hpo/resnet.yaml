@@ -1,0 +1,41 @@
+# =============================================================================
+# HPO 設定：ResNet（Optuna 自動調參）
+# -----------------------------------------------------------------------------
+# 契約：n_trials + direction + pruner + search_space{...}。
+# 影像微調訓練成本高，trial 數刻意少、用 Hyperband pruner 提早砍掉爛 trial。
+# =============================================================================
+
+n_trials: 15
+direction: maximize           # 目標 = 驗證集 F1（越大越好）
+metric: f1
+timeout: 1800                 # 秒
+
+pruner:
+  name: hyperband             # 適合昂貴的深度學習 trial
+  min_resource: 1
+  max_resource: 5             # 對應最大 epochs
+  reduction_factor: 3
+
+sampler:
+  name: tpe
+  seed: 42
+
+search_space:
+  learning_rate:
+    type: float
+    low: 0.0001
+    high: 0.01
+    log: true
+  batch_size:
+    type: categorical
+    choices: [16, 32, 64]
+  dropout:
+    type: float
+    low: 0.0
+    high: 0.5
+  freeze_backbone:
+    type: categorical
+    choices: [true, false]
+  optimizer:
+    type: categorical
+    choices: [adam, sgd]

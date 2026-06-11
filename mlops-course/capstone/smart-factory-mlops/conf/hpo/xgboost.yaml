@@ -1,0 +1,50 @@
+# =============================================================================
+# HPO 設定：XGBoost（Optuna 自動調參）
+# -----------------------------------------------------------------------------
+# 契約：n_trials + direction + pruner + search_space{...}。
+# 由 src/tuning 讀取，建立 Optuna study；search_space 每項描述採樣方式，
+# objective 會依 type 呼叫對應的 trial.suggest_*。
+# =============================================================================
+
+n_trials: 30
+direction: maximize           # 目標 = PR-AUC / F1（越大越好）
+metric: aucpr
+timeout: 600                  # 秒；超時即停（教學防呆）
+
+pruner:
+  name: median                # median | hyperband | nop
+  n_warmup_steps: 5
+
+sampler:
+  name: tpe                   # tpe | random
+  seed: 42
+
+# 搜尋空間：type 決定 Optuna 採樣方法（float / int / categorical）。
+search_space:
+  max_depth:
+    type: int
+    low: 3
+    high: 10
+  learning_rate:
+    type: float
+    low: 0.01
+    high: 0.3
+    log: true
+  n_estimators:
+    type: int
+    low: 100
+    high: 600
+    step: 50
+  subsample:
+    type: float
+    low: 0.6
+    high: 1.0
+  colsample_bytree:
+    type: float
+    low: 0.6
+    high: 1.0
+  reg_lambda:
+    type: float
+    low: 0.001
+    high: 10.0
+    log: true

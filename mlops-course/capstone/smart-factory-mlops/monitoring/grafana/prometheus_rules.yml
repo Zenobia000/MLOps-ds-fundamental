@@ -1,0 +1,73 @@
+# Prometheus 記錄規則 + 告警規則（M6）
+# 載入方式：在 prometheus.yml 的 rule_files 中引用本檔。
+# 指標名稱對齊 src/monitoring/metrics.py 的 namespace="smartfactory"。
+
+groups:
+  # --- 記錄規則：預先聚合昂貴查詢，降低儀表板 / 告警查詢成本 ---
+  - name: smartfactory_recording
+    interval: 30s
+    rules:
+      - record: job:smartfactory_qps:rate5m
+        expr: sum by (model) (rate(smartfactory_inference_requests_total[5m]))
+
+      - record: job:smartfactory_error_rate:ratio5m
+        expr: |
+          sum(rate(smartfactory_inference_requests_total{status="error"}[5m]))
+          / clamp_min(sum(rate(smartfactory_inference_requests_total[5m])), 1)
+
+      - record: job:smartfactory_latency_p95:5m
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum by (le, model) (rate(smartfactory_inference_latency_seconds_bucket[5m]))
+          )
+
+  # --- 告警規則：服務健康與資料/預測漂移 ---
+  - name: smartfactory_alerts
+    rules:
+      - alert: HighInferenceErrorRate
+        expr: job:smartfactory_error_rate:ratio5m > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          team: mlops
+        annotations:
+          summary: "推論錯誤率過高（> 5%）"
+          description: "近 5 分鐘錯誤率為 {{ $value | humanizePercentage }}，超過 5% 門檻。"
+
+      - alert: HighInferenceLatencyP95
+        expr: job:smartfactory_latency_p95:5m > 1.0
+        for: 10m
+        labels:
+          severity: warning
+          team: mlops
+        annotations:
+          summary: "推論 p95 延遲過高（model={{ $labels.model }}）"
+          description: "model={{ $labels.model }} 的 p95 延遲為 {{ $value }}s，持續超過 1s。"
+
+      - alert: InferenceTrafficDrop
+        expr: job:smartfactory_qps:rate5m < 0.01
+        for: 15m
+        labels:
+          severity: warning
+          team: mlops
+        annotations:
+          summary: "推論流量異常下降（model={{ $labels.model }}）"
+          description: "model={{ $labels.model }} 近 5 分鐘 QPS 趨近於 0，疑似服務不可用或上游中斷。"
+
+      - alert: PredictionDistributionShift
+        # 預測值平均偏離訓練期基準（baseline=0.30）超過 0.20，視為線上分布漂移徵兆。
+        # baseline 應隨模型版本更新；此處示意性設定，實務上以 reference 快照校準。
+        expr: |
+          abs(
+            sum by (model) (rate(smartfactory_model_prediction_sum[30m]))
+            / clamp_min(sum by (model) (rate(smartfactory_model_prediction_count[30m])), 1)
+            - 0.30
+          ) > 0.20
+        for: 30m
+        labels:
+          severity: warning
+          team: mlops
+        annotations:
+          summary: "預測分布偏移（model={{ $labels.model }}）"
+          description: "model={{ $labels.model }} 預測平均值偏離基準逾 0.20，建議執行 Evidently 漂移報告並評估重訓。"

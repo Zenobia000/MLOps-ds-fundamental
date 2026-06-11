@@ -1,0 +1,39 @@
+# =============================================================================
+# 訓練映像（M2/M4）：XGBoost / LSTM / ResNet 三型態訓練 + MLflow logging。
+# 刻意與服務映像分離：訓練需要重套件（torch、optuna 等），服務不該背這些。
+# 建置（repo 根目錄）：
+#   docker build -f docker/Dockerfile.train -t smart-factory-train:latest .
+# 執行範例：
+#   docker run --rm --env-file .env smart-factory-train:latest \
+#       python -m src.training.train model=xgboost
+# =============================================================================
+FROM python:3.11-slim AS base
+
+# 系統層：libgomp 供 XGBoost / OpenMP；libgl 供影像（OpenCV/Pillow）讀取
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        build-essential \
+        libgomp1 \
+        libgl1 \
+        libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PYTHONPATH=/app
+
+WORKDIR /app
+
+# 先裝依賴以善用 layer cache（依賴變動才重裝）
+COPY pyproject.toml ./
+COPY docker/requirements-train.txt ./requirements-train.txt
+RUN pip install --upgrade pip && pip install -r requirements-train.txt
+
+# 再複製原始碼與設定
+COPY src/ ./src/
+COPY conf/ ./conf/
+COPY feature_repo/ ./feature_repo/
+
+# 訓練容器預設進入點：透過 module 執行，與 'python -m src.training.train' 契約一致
+ENTRYPOINT ["python", "-m"]
+CMD ["src.training.train"]

@@ -1,0 +1,28 @@
+# =============================================================================
+# 資料設定：時序（產能需求預測）
+# -----------------------------------------------------------------------------
+# 場景：以歷史需求序列預測未來產能需求（單變量時序預測）。
+# 對應模型：LSTM（conf/model/lstm.yaml）或簡單 forecaster。
+# smoke test 沿用 toy_sensors.csv 的時間軸聚合出每機台需求代理值。
+# =============================================================================
+
+name: demand
+kind: timeseries
+
+# 需求歷史來源；smoke test 以玩具感測資料重建（src/data 會聚合出 demand 欄）。
+source: ../../datasets/toy_sensors.csv
+
+entity_column: machine_id
+timestamp_column: event_timestamp
+target_column: demand        # 由 src/data 聚合產生（玩具：以 current 為需求代理）
+
+# 滑動視窗設定：用過去 lookback 步預測未來 horizon 步。
+window:
+  lookback: 24               # 過去 24 個時間點（小時）
+  horizon: 6                 # 預測未來 6 個時間點
+
+# 切分策略：時序資料一律時間切。
+split:
+  strategy: temporal
+  test_size: 0.2
+  val_size: 0.1

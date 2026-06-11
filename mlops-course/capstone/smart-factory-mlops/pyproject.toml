@@ -1,0 +1,97 @@
+# =============================================================================
+# pyproject.toml — Smart Factory MLOps Capstone（教學 repo Layer 3 完整範例）
+# -----------------------------------------------------------------------------
+# 套件根 = src/（canonical import：from src.utils.config import load_config）。
+# 從 repo 根用 `python -m src.training.train` 執行；pytest pythonpath=["."]。
+# =============================================================================
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "smart-factory-mlops"
+version = "0.1.0"
+description = "工業級 MLOps 端到端範例：智慧工廠（結構化/時序/影像三型態並存）"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Smart Factory MLOps Capstone" }]
+
+# -----------------------------------------------------------------------------
+# 核心依賴：涵蓋 MLOps 全生命週期（追蹤/調參/版本/特徵/服務/監控/編排/驗證）
+# 註：torch / torchvision 在某些平台需指定 CPU/CUDA wheel，見 README 安裝說明。
+# -----------------------------------------------------------------------------
+dependencies = [
+  "mlflow>=2.10",            # 實驗追蹤 + 模型註冊（M2）
+  "optuna>=3.5",             # 超參數自動調參（M2）
+  "dvc>=3.40",               # 資料/管線版本化（M2）
+  "feast>=0.36",             # 特徵商店（M3）
+  "xgboost>=2.0",            # 表格預測維護模型（M2）
+  "scikit-learn>=1.4",       # 切分、指標、前處理
+  "pandas>=2.1",
+  "numpy>=1.26",
+  "torch>=2.1",              # 深度學習（vision/timeseries, M3/M4）
+  "torchvision>=0.16",       # 預訓練 ResNet
+  "onnxruntime>=1.17",       # ONNX 推論（M4）
+  "bentoml>=1.2",            # 模型服務打包（M4）
+  "fastapi>=0.110",          # 推論 API（M4）
+  "uvicorn>=0.27",           # ASGI server
+  "evidently>=0.4",          # 資料/模型漂移監控（M6）
+  "prefect>=2.16",           # 管線編排（M5）
+  "great-expectations>=0.18",# 資料契約驗證（M5）
+  "pydantic>=2.6",           # 設定/請求 schema 驗證
+  "pyyaml>=6.0",             # YAML 設定載入
+  "python-dotenv>=1.0",      # .env 環境變數
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+  "pytest-cov>=4.1",
+  "ruff>=0.3",
+  "black>=24.0",
+  "pre-commit>=3.6",
+  "detect-secrets>=1.4",
+]
+
+[tool.setuptools.packages.find]
+# src 為套件根；包含所有 src.* 子套件。
+include = ["src*"]
+
+# -----------------------------------------------------------------------------
+# Ruff — linter（取代 flake8/isort）
+# -----------------------------------------------------------------------------
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+exclude = ["notebooks", "data", "models", "mlruns", ".dvc"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "UP", "B", "C4"]
+ignore = ["E501"]  # 行長交給 black 處理
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
+
+# -----------------------------------------------------------------------------
+# Black — formatter
+# -----------------------------------------------------------------------------
+[tool.black]
+line-length = 100
+target-version = ["py310"]
+extend-exclude = "notebooks|data|models|mlruns"
+
+# -----------------------------------------------------------------------------
+# Pytest — pythonpath=["."] 讓 `from src.xxx import ...` 可在測試中解析
+# -----------------------------------------------------------------------------
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+markers = [
+  "unit: 單元測試（函式級）",
+  "integration: 整合測試（pipeline / API 級）",
+  "data: 資料契約測試（Great Expectations）",
+  "slow: 較慢的測試（真實模型訓練）",
+]

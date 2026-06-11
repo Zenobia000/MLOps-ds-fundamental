@@ -1,0 +1,24 @@
+# =============================================================================
+# Feast 特徵商店設定（local provider）
+# -----------------------------------------------------------------------------
+# 教學用最小可跑設定：離線存於本地 parquet（FileSource），線上存於 SQLite。
+# 正式環境可改 provider: aws/gcp、online_store: redis/dynamodb，介面不變。
+# =============================================================================
+
+project: smart_factory
+provider: local
+
+# 線上存儲：SQLite（零外部依賴，適合本地與 CI smoke test）。
+online_store:
+  type: sqlite
+  path: data/online_store.db
+
+# 離線存儲：本地檔案（parquet）。
+offline_store:
+  type: file
+
+# registry 記錄 entity / feature view 等中繼資料。
+registry: data/registry.db
+
+# 實體鍵（entity key）序列化版本。
+entity_key_serialization_version: 2

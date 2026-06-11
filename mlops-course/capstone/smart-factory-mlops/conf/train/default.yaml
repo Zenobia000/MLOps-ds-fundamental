@@ -1,0 +1,34 @@
+# =============================================================================
+# 訓練設定：通用訓練超參與切分策略（與模型型態無關的共用層）
+# -----------------------------------------------------------------------------
+# 此處放「跨模型共用」的訓練控制參數；模型專屬結構參數放 conf/model/*。
+# 由 src/training 載入；深度學習路徑（resnet/lstm）用 epochs/batch_size/lr，
+# 樹模型路徑（xgboost）忽略 deep_learning 區段。
+# =============================================================================
+
+# 通用控制
+seed: 42
+num_workers: 2
+device: auto                  # auto | cpu | cuda（src 端偵測 torch.cuda 可用性）
+
+# 深度學習訓練迴圈參數（resnet / lstm 使用）
+deep_learning:
+  epochs: 5                   # 教學 smoke：小 epoch；真實訓練請調大並見 TODO
+  batch_size: 32
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  optimizer: adam             # adam | sgd
+  scheduler: cosine           # cosine | step | none
+  early_stopping_patience: 3
+
+# 評估與品質門檻（CI/CD 的 quality gate 會讀這些閾值）
+evaluation:
+  primary_metric: f1          # tabular: f1 / vision: f1 / ts: rmse(越小越好)
+  min_threshold: 0.70         # 低於此值不註冊模型（CT pipeline 用）
+
+# MLflow logging 行為
+logging:
+  log_model: true
+  log_params: true
+  log_artifacts: true
+  register_model: false       # 預設不自動註冊；由 CI train.yml 控制

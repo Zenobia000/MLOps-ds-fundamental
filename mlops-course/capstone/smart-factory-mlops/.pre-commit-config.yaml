@@ -1,0 +1,40 @@
+# =============================================================================
+# .pre-commit-config.yaml — commit 前自動 lint / format / 掃秘密
+# -----------------------------------------------------------------------------
+# 安裝：pre-commit install
+# 手動全跑：pre-commit run --all-files
+# 流程：ruff（lint+autofix）→ black（format）→ detect-secrets（防密鑰外洩）
+# =============================================================================
+
+repos:
+  # --- 基礎衛生檢查 ----------------------------------------------------------
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+        args: ["--maxkb=1024"]
+      - id: check-merge-conflict
+
+  # --- Ruff：linter + import 排序（自動修可修的）----------------------------
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.3.7
+    hooks:
+      - id: ruff
+        args: ["--fix"]
+
+  # --- Black：程式碼格式化 ---------------------------------------------------
+  - repo: https://github.com/psf/black
+    rev: 24.4.2
+    hooks:
+      - id: black
+
+  # --- detect-secrets：阻擋密鑰 / token 進入版控 ----------------------------
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args: ["--baseline", ".secrets.baseline"]
+        exclude: ".*\\.lock$|package-lock\\.json$"

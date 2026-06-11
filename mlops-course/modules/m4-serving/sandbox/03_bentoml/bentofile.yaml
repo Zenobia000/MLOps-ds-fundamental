@@ -1,0 +1,23 @@
+# bentofile.yaml 示範什麼:
+#   階 7 BentoML 的「打包描述檔」——告訴 BentoML 怎麼把
+#   service + 模型 + 依賴 收斂成一個可部署的 Bento。
+#
+# 對比 Docker:Dockerfile 你要自己寫所有步驟;
+#            bentofile 你只「描述需求」,BentoML 幫你生出 Docker image。
+#
+# 怎麼用:
+#   bentoml build                 # 依本檔打包成一個 Bento
+#   bentoml list                  # 看打包好的 Bento
+#   bentoml containerize iris_classifier:latest   # 一鍵生成 Docker image
+
+service: "service:IrisClassifier"   # 指向 service.py 裡的 service class
+
+labels:
+  owner: mlops-course
+  stage: sandbox-m4
+
+include:
+  - "service.py"                    # 要打包進 Bento 的程式檔
+
+python:
+  requirements_txt: "requirements.txt"   # 依賴從 requirements.txt 讀

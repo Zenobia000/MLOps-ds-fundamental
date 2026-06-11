@@ -1,0 +1,46 @@
+# BentoML 建置設定：smart_factory 服務（表格 + 影像雙模型）
+# 建置指令（repo 根目錄）：
+#   bentoml build -f services/bentofile.yaml
+# 容器化（產出 OCI image）：
+#   bentoml containerize smart_factory:latest
+
+service: "services.service:svc"        # service 進入點：模組:Service 物件
+name: "smart_factory"
+description: "智慧工廠 MLOps：預測性維護（XGBoost）+ 視覺瑕疵檢測（ONNX ResNet）統一 API"
+labels:
+  owner: smart-factory-mlops
+  module: M4-serving
+  stage: capstone
+
+# 打包進 bento 的程式碼（只收必要來源，避免把資料 / models 帶進 image）
+include:
+  - "src/**/*.py"
+  - "services/**/*.py"
+  - "conf/**/*.yaml"
+exclude:
+  - "tests/"
+  - "notebooks/"
+  - "data/"
+  - "**/__pycache__/"
+  - "*.ipynb"
+
+# Python 依賴：固定推論執行期所需，訓練重套件（torch 等）不進服務 image
+python:
+  requirements_txt: "./requirements-serve.txt"
+  lock_packages: true        # 鎖定版本，產出可重現的 image
+  # packages:                # 若不維護 requirements-serve.txt 可改用內聯清單
+  #   - bentoml>=1.2
+  #   - xgboost>=2.0
+  #   - onnxruntime>=1.17
+  #   - mlflow>=2.10
+  #   - pydantic>=2.5
+  #   - numpy>=1.26
+  #   - pillow>=10.0
+
+# Docker 基底：CI/CD 與 docker-compose 會以此產生服務 image
+docker:
+  python_version: "3.11"
+  distro: debian
+  cuda_version: null          # 推論用 CPU；如需 GPU 改填對應 CUDA 版本
+  env:
+    BENTOML_DO_NOT_TRACK: "True"

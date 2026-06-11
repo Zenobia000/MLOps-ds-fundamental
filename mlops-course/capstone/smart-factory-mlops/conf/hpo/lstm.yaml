@@ -1,0 +1,37 @@
+# =============================================================================
+# HPO 設定：LSTM（Optuna 自動調參）
+# -----------------------------------------------------------------------------
+# 契約：n_trials + direction + pruner + search_space{...}。
+# 時序迴歸目標 = 驗證 RMSE（越小越好），故 direction = minimize。
+# =============================================================================
+
+n_trials: 20
+direction: minimize           # 目標 = 驗證 RMSE（越小越好）
+metric: rmse
+timeout: 900                  # 秒
+
+pruner:
+  name: median
+  n_warmup_steps: 3
+
+sampler:
+  name: tpe
+  seed: 42
+
+search_space:
+  hidden_size:
+    type: categorical
+    choices: [16, 32, 64, 128]
+  num_layers:
+    type: int
+    low: 1
+    high: 3
+  dropout:
+    type: float
+    low: 0.0
+    high: 0.4
+  lr:
+    type: float
+    low: 0.0005
+    high: 0.05
+    log: true

@@ -1,0 +1,32 @@
+# =============================================================================
+# 資料設定：影像（產線視覺瑕疵檢測）
+# -----------------------------------------------------------------------------
+# 場景：以產品影像判斷瑕疵（good / defect）。
+# 對應模型：ResNet 微調（conf/model/resnet.yaml）+ ONNX 匯出。
+# smoke test 用 src/data 產生的玩具影像；真實資料用 MVTec AD（見 data/README）。
+# =============================================================================
+
+name: images
+kind: image
+
+# 影像資料夾（ImageFolder 風格：<root>/<class_name>/<img>.png）。
+# smoke test 時若不存在，由 src/data 動態生成小樣本玩具影像。
+source: data/raw/images
+
+# 類別定義（二元瑕疵檢測；index 即模型輸出對應）。
+classes:
+  - good
+  - defect
+num_classes: 2
+
+# 影像前處理（與 ImageNet 預訓練統計一致，供 transforms 使用）。
+image_size: 224
+normalize:
+  mean: [0.485, 0.456, 0.406]
+  std: [0.229, 0.224, 0.225]
+
+# 切分策略：影像無時間關聯，採隨機切分。
+split:
+  strategy: random
+  test_size: 0.2
+  val_size: 0.1

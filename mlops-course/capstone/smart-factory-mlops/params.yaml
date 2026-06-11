@@ -1,0 +1,31 @@
+# =============================================================================
+# params.yaml — DVC 追蹤的超參數
+# -----------------------------------------------------------------------------
+# dvc.yaml 各階段以 `params:` 引用本檔欄位；改參數會讓 DVC 偵測到並重跑對應階段。
+# 這裡是「管線層」的可調旋鈕；模型內部細節仍以 conf/ 為主來源（兩者刻意分層）。
+# =============================================================================
+
+prepare:
+  source: ../../datasets/toy_sensors.csv  # smoke test 用玩具感測資料
+  test_size: 0.2
+  val_size: 0.1
+  split_strategy: temporal                # 時序切分，防洩漏
+
+features:
+  rolling_window: 6                        # 滾動統計視窗（小時）
+  add_rolling_mean: true
+  add_rolling_std: true
+  add_lag_features: true
+  lags: [1, 3, 6]
+
+train:
+  model: xgboost                           # 對應 conf/model/xgboost.yaml
+  max_depth: 6
+  learning_rate: 0.05
+  n_estimators: 300
+  subsample: 0.8
+  random_state: 42
+
+evaluate:
+  primary_metric: f1
+  min_threshold: 0.70                      # 品質門檻；低於不通過

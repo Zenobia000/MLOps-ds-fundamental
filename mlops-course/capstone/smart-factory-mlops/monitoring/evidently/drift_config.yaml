@@ -1,0 +1,37 @@
+# Evidently 漂移偵測設定（M6）
+# 由 src/monitoring/drift.py 讀取使用；所有閾值集中於此，不寫死在程式。
+# 對齊跨 agent 契約：entity = machine_id，時間戳 = event_timestamp。
+
+# 監控目標：tabular 預測性維護模型的輸入特徵
+tabular:
+  # 參考分布快照（訓練集統計），相對於 repo 根目錄
+  reference_snapshot: monitoring/evidently/reference/tabular_reference.parquet
+  # 要監控漂移的數值特徵（與 conf/model/xgboost 的特徵一致）
+  columns:
+    - temperature
+    - vibration
+    - current
+  # 排除欄位（實體鍵 / 時間戳 / 標籤不參與漂移比對）
+  exclude:
+    - machine_id
+    - event_timestamp
+    - failure
+  # 整體資料集漂移判定：漂移特徵佔比超過此值即告警
+  dataset_drift_share_threshold: 0.5
+  # 報告輸出位置
+  report_output: monitoring/evidently/reports/tabular_drift.html
+
+# 監控目標：vision 瑕疵檢測模型的預測輸出分布
+# 影像無法直接做表格式 column drift，故以「預測信心 / 類別分布」作為線上代理指標
+vision:
+  reference_snapshot: monitoring/evidently/reference/vision_reference.parquet
+  columns:
+    - defect_probability
+    - predicted_class
+  dataset_drift_share_threshold: 0.5
+  report_output: monitoring/evidently/reports/vision_drift.html
+
+# 排程建議（由 CI/CD 或 cron 觸發，非本檔強制）
+schedule:
+  cadence: daily          # daily | hourly | on_demand
+  current_window_hours: 24 # 取最近 N 小時的線上資料作為 current

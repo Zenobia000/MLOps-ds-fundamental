@@ -1,0 +1,8 @@
+# m3 沙盒最小依賴。建議用乾淨虛擬環境安裝:
+#   python -m venv .venv && source .venv/bin/activate
+#   pip install -r requirements.txt
+#
+# 註:feast 會自動帶進 pandas / pyarrow,這裡仍明列以利除錯。
+feast==0.40.1
+pandas>=2.0
+pyarrow>=14.0
