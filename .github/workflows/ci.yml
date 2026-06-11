@@ -1,0 +1,39 @@
+# =============================================================================
+# .github/workflows/ci.yml — 啟用版 CI（M5 教學範例的「真實 repo 根」版本）
+# -----------------------------------------------------------------------------
+# 這是 mlops-course/modules/m5-automation/sandbox/github-actions/ci.yml 的
+# 「已啟用」版本：GitHub 只執行 repo 根 .github/workflows/ 下的 workflow，
+# 所以教學範例要搬到這裡才會真的跑。路徑也對齊本 repo（沙盒測試在
+# mlops-course/modules/m5-automation/sandbox/tests/）。
+#
+# 教學重點（與沙盒一致）：on（觸發）/ runs-on（在哪跑）/ steps（跑什麼）。
+# pytest 一旦失敗，step 回傳非 0、整條 workflow 變紅 → 達成「壞 code 進不來」。
+# =============================================================================
+
+name: ci
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch: # 允許在 Actions 頁面手動觸發
+
+jobs:
+  m5-sandbox-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest
+
+      - name: Run M5 sandbox tests (CI quality gate)
+        run: |
+          python -m pytest mlops-course/modules/m5-automation/sandbox/tests/ -v
