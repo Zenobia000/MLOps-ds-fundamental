@@ -24,19 +24,23 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v6
+      # 不需要 actions/setup-python：uv 會依 mlops-course/.python-version 自動取得 3.11，
+      # 跟學生本機拿到的是同一個版本來源。
+      #
+      # 用 uv.lock 裝，CI 才會跟學生拿到「完全相同的版本」。
+      # --frozen：lock 與 pyproject.toml 不一致就直接失敗，不會偷偷重解版本。
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
         with:
-          python-version: "3.11"
+          enable-cache: true
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install pytest
+      - name: Sync dependencies from uv.lock
+        working-directory: mlops-course
+        run: uv sync --extra dev --frozen
 
       - name: Run M5 sandbox tests (CI quality gate)
-        run: |
-          python -m pytest mlops-course/modules/m5-automation/sandbox/tests/ -v
+        working-directory: mlops-course
+        run: uv run --frozen python -m pytest modules/m5-automation/sandbox/tests/ -v
 
   # ===========================================================================
   # 教學 notebook 的品質門檻。
@@ -52,29 +56,29 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v6
+      # 先前這裡是手寫一串 pip install，等於 CI 跟學生裝的不是同一套環境——
+      # CI 綠不代表學生跑得動，反之亦然。改成從 uv.lock 裝，版本完全一致。
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
         with:
-          python-version: "3.11"
+          enable-cache: true
 
-      - name: Install notebook toolchain and the deps those notebooks import
-        run: |
-          python -m pip install --upgrade pip
-          # 只裝 4 本教學 notebook 真正 import 的東西（刻意不裝 feast/torch/bentoml，
-          # 那些是 m3/m4 腳本的依賴，notebook 用不到，裝了只會拖慢 CI）。
-          pip install pytest nbmake nbstripout \
-                      scikit-learn pandas numpy matplotlib plotly optuna \
-                      "evidently>=0.4,<0.5"
+      - name: Sync the locked course environment
+        working-directory: mlops-course
+        run: uv sync --extra dev --frozen
 
+      # 直接跑學生會跑的同一組 make 指令——CI 與課堂上的行為不會分岔。
+      # Makefile 的 PYTHON 變數偵測到 .venv 就會自動用它，不需要 activate。
       - name: Verify no notebook carries committed outputs
-        run: |
-          nbstripout --verify $(git ls-files '*.ipynb')
+        working-directory: mlops-course
+        run: make nb-verify
 
       - name: Execute teaching notebooks (modules/)
-        run: |
-          python -m pytest --nbmake $(git ls-files 'mlops-course/modules/**/*.ipynb') -q
+        working-directory: mlops-course
+        run: make nb-test
 
+      # capstone 用課程環境跑：它的 notebook 只 import pandas 層級的東西，
+      # 不需要另外裝 capstone/smart-factory-mlops/pyproject.toml 那一套。
       - name: Execute capstone notebooks
-        working-directory: mlops-course/capstone/smart-factory-mlops
-        run: |
-          python -m pytest --nbmake notebooks/ -q
+        working-directory: mlops-course
+        run: .venv/bin/python -m pytest --nbmake capstone/smart-factory-mlops/notebooks/ -q

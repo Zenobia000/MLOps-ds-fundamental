@@ -146,7 +146,18 @@ make workspace-m1                     # 這時才找得到 Makefile
 
 ## 5. 從這裡開始
 
-1. 先讀 **[SETUP.md](./SETUP.md)** 把環境一次裝好（Python 3.11 + uv/conda）。
+1. 先讀 **[SETUP.md](./SETUP.md)** 把環境一次裝好：
+
+   ```bash
+   cd mlops-course
+   make setup       # uv 建 .venv + 依 uv.lock 裝全課依賴（Python 3.11 自動取得）
+   make check-env   # 確認站對地方
+   ```
+
+   > 全課共用**一個** `.venv`，版本由 `uv.lock` 鎖死——你、同學、CI 拿到的是同一組版本。
+   > 各模組沙盒**不要**再自己 `pip install`（m4 的兩份 `requirements.txt` 是容器映像用的，不是給你的環境）。
+   > `make` 指令會自動用 `.venv`，不必手動 activate。
+
 2. `make help` 看可用指令；`make m1` 印出第一個模組的 README 路徑。
 3. `cd modules/m1-foundations`，讀它的 README，照五段格式走：學什麼 → 跑 sandbox → 整合任務 → 卡住怎麼辦 → 檢核題。
 4. 走完一個模組就 `make checkpoint-mN` 存檔，再前進下一個。
