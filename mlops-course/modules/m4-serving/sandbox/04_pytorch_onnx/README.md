@@ -22,9 +22,11 @@ train_resnet.py     →   export_onnx.py      →   serve_bento.py
 
 ## 0. 裝依賴
 
-```bash
-pip install -r requirements.txt
-```
+**不用裝**——torch / torchvision / onnx / onnxruntime / bentoml
+都已在課程統一環境裡（`mlops-course/uv.lock` 鎖定版本，CPU 版 torch）。
+
+> 本資料夾原本有一份 `requirements.txt`，已移除：它只是重複課程依賴，
+> 而且版本釘得跟課程環境不同，裝下去會互相打架。
 
 > torch/torchvision 第一次會下載預訓練權重(約幾十 MB),需要網路。
 

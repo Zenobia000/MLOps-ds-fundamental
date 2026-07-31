@@ -7,9 +7,11 @@
 
 ## 1. 裝依賴
 
-```bash
-pip install -r requirements.txt
-```
+**不用裝**——FastAPI / uvicorn / scikit-learn 都已在課程統一環境裡
+（`mlops-course/uv.lock` 鎖定版本）。沒建過環境就先回 `mlops-course/` 跑 `make setup`。
+
+> 本資料夾的 `requirements.txt` **是給 02_docker 的容器用的**，版本刻意釘死且與課程環境不同。
+> 在你的 venv 裡 `pip install -r` 會把環境降級，前面模組可能就跑不動了——別裝它。
 
 ## 2. 起服務
 

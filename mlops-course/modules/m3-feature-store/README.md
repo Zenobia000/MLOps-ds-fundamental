@@ -27,13 +27,16 @@
 > `cd` 進沙盒跑完,記得 `cd` 回 `mlops-course/` 再接下一段。
 > Git 是例外——repo 根在再上一層,詳見[課程 README「指令從哪裡下」](../../README.md#指令從哪裡下)。
 
-先進到沙盒並裝依賴(建議用乾淨 venv):
+**不需要另外裝依賴**——Feast 已經在課程統一環境裡（`mlops-course/uv.lock` 鎖定版本）。
+沒建過環境就先回 `mlops-course/` 跑 `make setup`,不確定站對地方就跑 `make check-env`。
 
 ```bash
 cd mlops-course/modules/m3-feature-store/sandbox   # 從 repo 根出發
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
 ```
+
+> 早期版本要求在沙盒裡另建一個 venv 並 `pip install -r requirements.txt`,已移除:
+> 那會產生第二套版本、跟課程環境打架(例如把 numpy/sklearn 降級),
+> 與「一次裝好全課依賴」的設計互相矛盾。
 
 然後照順序跑:
 
@@ -125,7 +128,8 @@ checkpoints/after-m2/
 
 - `feast apply` 找不到 parquet → 你忘了先跑 `python 00_prepare_data.py`。
 - `get_historical_features` 回傳特徵全是 NaN → entity_df 的 `event_timestamp` 早於特徵事件時間,或超過 ttl(本例 ttl=2 天)。這正是 point-in-time 在保護你。
-- `feast` 指令找不到 → 確認 venv 已啟動且 `pip install -r requirements.txt` 成功。
+- `feast` 指令找不到 → 課程環境沒建好或沒啟用。回 `mlops-course/` 跑 `make check-env`;
+  沒建過就 `make setup`。要在終端機直接下 `feast` 指令需先 `source .venv/bin/activate`。
 
 ---
 

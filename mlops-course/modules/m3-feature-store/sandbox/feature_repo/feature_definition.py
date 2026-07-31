@@ -22,12 +22,16 @@ from datetime import timedelta
 
 from feast import Entity, FeatureView, Field, FileSource
 from feast.types import Float64, Int64
+from feast.value_type import ValueType
 
 # --- Entity:特徵的主體 ---
 # join_keys 是 join 時用來對齊的欄位名,必須和 parquet 裡的欄位一致。
 patient = Entity(
     name="patient",
     join_keys=["patient_id"],
+    # value_type 明確宣告 join key 的型別。Feast 目前可以推論,但下一版起是必填,
+    # 不寫會噴 DeprecationWarning——先寫好,免得未來升版才發現壞掉。
+    value_type=ValueType.INT64,
     description="一位糖尿病篩檢病患",
 )
 

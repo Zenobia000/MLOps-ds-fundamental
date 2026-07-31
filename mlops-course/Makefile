@@ -12,8 +12,15 @@ MLRUNS_DIR  ?= ./mlruns
 # 模組根目錄
 MODULES := modules
 
-# Python 直譯器（venv 裡通常有 python，系統環境常常只有 python3；可覆蓋）
-PYTHON ?= python3
+# ── 課程統一環境 ──────────────────────────────────────────────
+# 全課共用一個 uv 建的 .venv，版本由 uv.lock 鎖死（同一個 commit → 同一組版本）。
+# 這正是 m2 在教的「環境版本也要版控」，課程自己先做到。
+VENV        := .venv
+VENV_PYTHON := $(VENV)/bin/python
+
+# 有 .venv 就自動用它，沒有才退回系統 python3。
+# 好處：學生忘了 source activate，make 指令照樣跑在正確環境裡。
+PYTHON ?= $(if $(wildcard $(VENV_PYTHON)),$(VENV_PYTHON),python3)
 
 # 教學 notebook（只含 modules/；capstone/ 的另外測，見 nb-test）
 NOTEBOOKS := $(shell find $(MODULES) -name '*.ipynb' -not -path '*/.ipynb_checkpoints/*' 2>/dev/null | sort)
@@ -24,15 +31,16 @@ NOTEBOOKS := $(shell find $(MODULES) -name '*.ipynb' -not -path '*/.ipynb_checkp
         m1 m2 m3 m4 m5 m6 \
         workspace-m1 workspace-m2 workspace-m3 workspace-m4 workspace-m5 workspace-m6 \
         checkpoint-m1 checkpoint-m2 checkpoint-m3 checkpoint-m4 checkpoint-m5 \
-        nb nb-test nb-strip nb-verify \
+        nb nb-test nb-strip nb-verify check-env \
         capstone-up
 
 # ── 總覽 ──────────────────────────────────────────────────────
 help: ## 顯示所有可用指令
 	@echo "MLOps 教學 repo — 可用指令："
 	@echo ""
-	@echo "  環境："
-	@echo "    make setup            一次裝好全課依賴（pip install -e .）"
+	@echo "  環境（全課共用一個 .venv，版本由 uv.lock 鎖死）："
+	@echo "    make setup            建環境 + 裝全課依賴（uv sync --extra dev）"
+	@echo "    make check-env        確認站在正確環境上（裝完 / 卡住時先跑這個）"
 	@echo "    make mlflow-ui        啟動本地 MLflow UI（讀 $(MLRUNS_DIR)，port $(MLFLOW_PORT)）"
 	@echo ""
 	@echo "  模組導覽（只印當前模組 README 路徑，漸進解鎖）："
@@ -55,9 +63,30 @@ help: ## 顯示所有可用指令
 	@echo ""
 
 # ── 環境 ──────────────────────────────────────────────────────
-setup: ## 一次裝好全課依賴
-	pip install -e .
-	@echo "[setup] 依賴安裝完成。進階 HPO 可另外裝：pip install -e \".[advanced]\""
+setup: ## 一次裝好全課依賴（uv sync，版本由 uv.lock 鎖定）
+	@command -v uv >/dev/null || { \
+	  echo "[setup] 找不到 uv。先安裝："; \
+	  echo "        curl -LsSf https://astral.sh/uv/install.sh | sh"; \
+	  echo "        （或改用 conda，見 SETUP.md 方式 B）"; exit 1; }
+	uv sync --extra dev
+	@echo "[setup] 完成。環境在 ./$(VENV)/，Python 版本依 .python-version（3.11）。"
+	@echo "[setup] make 指令會自動用 ./$(VENV)，不必手動 activate。"
+	@echo "[setup] 要在終端機直接跑 python/pytest 才需要：source $(VENV)/bin/activate"
+	@echo "[setup] 進階 HPO（Ray Tune / FLAML）：uv sync --extra dev --extra advanced"
+
+check-env: ## 確認目前站在課程統一環境上（裝完、卡住時先跑這個）
+	@echo "[check-env] make 會用的 Python：$(PYTHON)"
+	@test -x $(VENV_PYTHON) || { \
+	  echo "  ✗ 找不到 ./$(VENV)/ —— 還沒建環境，先跑：make setup"; exit 1; }
+	@$(VENV_PYTHON) -c "import sys; v=sys.version_info; \
+	  print(f'  Python {v.major}.{v.minor}.{v.micro}'); \
+	  sys.exit(0 if (v.major, v.minor) == (3, 11) else 1)" \
+	  || { echo "  ✗ 不是 Python 3.11 —— 刪掉 $(VENV)/ 再 make setup"; exit 1; }
+	@uv lock --check >/dev/null 2>&1 \
+	  && echo "  ✓ uv.lock 與 pyproject.toml 一致" \
+	  || echo "  ! uv.lock 已過期（pyproject.toml 改過）→ 跑 uv lock 更新後 commit"
+	@$(VENV_PYTHON) -c "import mlflow, optuna, sklearn, feast, evidently; print('  ✓ 核心套件可 import')"
+	@echo "  ✓ 環境就緒"
 
 mlflow-ui: ## 啟動本地 MLflow UI
 	@echo "[mlflow-ui] 開瀏覽器到 http://127.0.0.1:$(MLFLOW_PORT)"
@@ -169,7 +198,7 @@ checkpoint-m5: ## 把 workspace 存成 after-m5 快照
 nb: ## 啟動 JupyterLab（教學 notebook 在 modules/*/sandbox/）
 	@echo "[nb] 教學 notebook："
 	@for f in $(NOTEBOOKS); do echo "     $$f"; done
-	jupyter lab
+	$(PYTHON) -m jupyterlab
 
 nb-test: ## 實際執行每一本 notebook，確認全部可從頭跑到尾
 	@echo "[nb-test] 執行 modules/ 的 $(words $(NOTEBOOKS)) 本 notebook"
@@ -179,11 +208,11 @@ nb-test: ## 實際執行每一本 notebook，確認全部可從頭跑到尾
 	@echo "          cd capstone/smart-factory-mlops && $(PYTHON) -m pytest --nbmake notebooks/ -q"
 
 nb-strip: ## 清掉 notebook 的執行輸出（commit 前跑，保持 diff 乾淨）
-	nbstripout $(NOTEBOOKS)
+	$(PYTHON) -m nbstripout $(NOTEBOOKS)
 	@echo "[nb-strip] 已清除 modules/ notebook 的 outputs"
 
 nb-verify: ## 檢查 notebook 是否殘留 outputs（CI 用，不修改檔案）
-	@nbstripout --verify $(NOTEBOOKS) \
+	@$(PYTHON) -m nbstripout --verify $(NOTEBOOKS) \
 	  && echo "[nb-verify] OK：所有 notebook 皆無殘留 outputs" \
 	  || (echo "[nb-verify] 失敗：有 notebook 帶著 outputs，請先跑 make nb-strip"; exit 1)
 

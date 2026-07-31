@@ -20,9 +20,11 @@
 
 ## 1. 裝依賴
 
-```bash
-pip install -r requirements.txt
-```
+**不用裝**——BentoML / scikit-learn 都已在課程統一環境裡
+（`mlops-course/uv.lock` 鎖定版本）。
+
+> 本資料夾的 `requirements.txt` **是給 `bentofile.yaml` 打包 Bento 映像用的**，
+> 版本刻意釘死且與課程環境不同。別在你的 venv 裡裝它。
 
 ## 2. 先把模型存進 Model Store
 

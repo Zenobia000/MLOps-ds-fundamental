@@ -1,3 +1,13 @@
+# ⚠️ 這份是「容器映像」的依賴清單,不是給你的課程環境用的。
+#
+# 誰在讀它:02_docker/Dockerfile 會 COPY 這個檔再 pip install,把依賴烤進 image。
+# 為什麼釘死版本:容器要的是「每次 build 都一模一樣」,所以用 == 精確鎖定,
+#   這跟課程環境用 uv.lock 鎖定是同一個道理,只是換到映像檔的世界。
+#
+# ★ 不要在你的課程 venv 裡跑 pip install -r 這個檔 ★
+#   這裡的版本是為容器挑的,和 mlops-course/uv.lock 不同,裝下去會把你的環境降級,
+#   前面模組可能就跑不動了。要在本機跑 app.py,課程環境已經有 fastapi/uvicorn/sklearn。
+#
 # 01_fastapi 沙盒依賴(也供 02_docker 容器化使用)
 fastapi==0.115.0
 uvicorn[standard]==0.30.6

@@ -30,6 +30,7 @@ dependencies = [
 
     # m3：特徵商店
     "feast>=0.36",
+    "pyarrow>=14.0",      # pandas 讀寫 parquet 的後端（Feast 的 FileSource 吃 parquet）
 
     # m4：服務化
     "fastapi>=0.110",
@@ -37,6 +38,7 @@ dependencies = [
     "bentoml>=1.2",
     "torch>=2.2",
     "torchvision>=0.17",
+    "onnx>=1.16",         # onnxruntime.quantization 需要它（m4 沙盒 04 的動態量化）
     "onnxruntime>=1.17",
 
     # m5：自動化
