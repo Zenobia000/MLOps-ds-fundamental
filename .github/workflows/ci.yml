@@ -77,8 +77,30 @@ jobs:
         working-directory: mlops-course
         run: make nb-test
 
-      # capstone 用課程環境跑：它的 notebook 只 import pandas 層級的東西，
-      # 不需要另外裝 capstone/smart-factory-mlops/pyproject.toml 那一套。
+  # ===========================================================================
+  # capstone（Layer 3 生產骨架）有自己的 pyproject / uv.lock，因為它要能獨立部署。
+  # 但先前 CI 完全沒碰它——26 個測試沒人跑、lock 沒人驗，久了一定腐爛。
+  # 這個 job 用 capstone 自己的 lock 建環境，跑它的測試與 notebook。
+  # ===========================================================================
+  capstone:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mlops-course/capstone/smart-factory-mlops
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Sync the locked capstone environment
+        run: uv sync --extra dev --frozen
+
+      - name: Run capstone tests
+        run: uv run --frozen python -m pytest tests/ -q
+
       - name: Execute capstone notebooks
-        working-directory: mlops-course
-        run: .venv/bin/python -m pytest --nbmake capstone/smart-factory-mlops/notebooks/ -q
+        run: uv run --frozen python -m pytest --nbmake notebooks/ -q
