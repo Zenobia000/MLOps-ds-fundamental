@@ -14,7 +14,9 @@ name = "smart-factory-mlops"
 version = "0.1.0"
 description = "工業級 MLOps 端到端範例：智慧工廠（結構化/時序/影像三型態並存）"
 readme = "README.md"
-requires-python = ">=3.10"
+# 鎖 3.11：兩個 Dockerfile 的基底都是 python:3.11-slim，課程環境也是 3.11。
+# 三處一致，才不會出現「本機跑得動、映像裡爆掉」。
+requires-python = "==3.11.*"
 license = { text = "MIT" }
 authors = [{ name = "Smart Factory MLOps Capstone" }]
 
@@ -33,6 +35,8 @@ dependencies = [
   "numpy>=1.26",
   "torch>=2.1",              # 深度學習（vision/timeseries, M3/M4）
   "torchvision>=0.16",       # 預訓練 ResNet
+  "onnx>=1.15",              # ONNX 匯出（vision 模型；docker/requirements-train.txt 也列了它）
+  "onnxscript>=0.1",         # torch>=2.13 的 torch.onnx.export 改走 dynamo，需要它才匯得出來
   "onnxruntime>=1.17",       # ONNX 推論（M4）
   "bentoml>=1.2",            # 模型服務打包（M4）
   "fastapi>=0.110",          # 推論 API（M4）
@@ -49,6 +53,8 @@ dependencies = [
 dev = [
   "pytest>=8.0",
   "pytest-cov>=4.1",
+  "nbmake>=1.5",             # 實際執行 notebooks/ 的三本，CI 用
+  "nbstripout>=0.7",         # 擋下帶著執行輸出的 notebook
   "ruff>=0.3",
   "black>=24.0",
   "pre-commit>=3.6",

@@ -89,8 +89,11 @@
 ## 5. 快速開始（Quickstart）
 
 ```bash
-# 0) 安裝（建議虛擬環境）
-pip install -e ".[dev]"
+# 0) 建環境 + 裝依賴（uv 依 .python-version 取得 3.11，版本由 uv.lock 鎖死）
+make setup
+make check-env          # 確認站對地方
+
+#    沒有 uv 的話：先 pip install -e ".[dev]"（版本會自行解析，可能與 lock 不同）
 
 # 1) 設定環境變數（複製範本後填值；.env 不進 Git）
 cp .env.example .env
@@ -164,9 +167,16 @@ curl -X POST http://localhost:3000/predict_maintenance -H 'Content-Type: applica
 #                 {"machine_id":"machine_02","failure_probability":0.0001,"will_fail":false}]}
 ```
 
-> 依賴：`make train-*` / `tune` 需 `pip install -e .`（含 mlflow/optuna/dvc/xgboost）；
-> `train-vision` 另需 torch+torchvision+onnx+onnxscript；`serve` 需 bentoml+pillow；
-> `monitor` 需 evidently；`pipeline` 需 dvc（`dvc init` 已完成）。
+> 依賴：全部由 `make setup`（`uv sync --extra dev`）一次裝好，版本鎖在 `uv.lock`。
+> 各 target 用到的重點套件：`train-*`/`tune` → mlflow/optuna/dvc/xgboost；
+> `train-vision` → torch+torchvision+onnx+**onnxscript**（torch 2.13 起 `torch.onnx.export`
+> 走 dynamo，少了 onnxscript 會匯不出 ONNX）；`serve` → bentoml+pillow；
+> `monitor` → evidently；`pipeline` → dvc（`dvc init` 已完成）。
+>
+> **容器映像的版本也來自同一份 lock**：`docker/requirements-train.txt` 與
+> `services/requirements-serve.txt` 是從 `uv.lock` 產生的精確釘版清單，請勿手改；
+> 要更新就改 `pyproject.toml` → `uv lock` → 重新產生。這樣「本機、訓練映像、服務映像」
+> 三者版本一致，不會出現「本機跑得動、容器裡爆掉」。
 
 ---
 

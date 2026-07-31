@@ -1,10 +1,16 @@
-# 服務（推論）執行期最小依賴 ─ 刻意「瘦身」：不含 torch / 訓練套件
-# 由 services/bentofile.yaml 與 docker/Dockerfile.serve 共用。
-bentoml>=1.2,<2.0
-xgboost>=2.0
-onnxruntime>=1.17
-mlflow>=2.10
-pydantic>=2.5
-numpy>=1.26
-pillow>=10.0
-pyyaml>=6.0
+# 服務(推論)映像依賴 — 版本由 uv.lock 產生,請勿手改。
+#
+# 誰在讀它:services/bentofile.yaml 的 requirements_txt 與 docker/Dockerfile.serve。
+# 刻意「瘦身」:不含 torch / 訓練套件,推論只需要 onnxruntime + xgboost。
+# 版本全部取自本專案的 uv.lock,與訓練映像、開發環境同一組。
+#
+# 怎麼更新:改 pyproject.toml → uv lock → 重新產生本檔。
+
+bentoml==1.4.39
+xgboost==3.2.0
+onnxruntime==1.28.0
+mlflow==3.15.0
+pydantic==2.13.4
+numpy==1.26.4
+pillow==12.3.0
+pyyaml==6.0.3
