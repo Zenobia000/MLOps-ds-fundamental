@@ -2,7 +2,7 @@
 
 > **版本**：v1 · 2026 視角
 > **定位**：以傳統 ML 三大資料型態（結構化 / 時序 / 影像）打穩 MLOps 骨幹，並點出 LLMOps 是同一套原則的延伸。
-> **與本 repo 的關係**：以現有的 `MLflow/`（實驗追蹤、registry、evaluation）與 `MLOps/feast/`（特徵商店）為「紅線」往外擴，學員可直接接續現有程式碼。
+> **與本 repo 的關係**：對應教學骨架 `mlops-course/`——每模組的單工具沙盒在 `mlops-course/modules/mN-*/sandbox/`，端到端整合成品在 `mlops-course/capstone/smart-factory-mlops/`，學員可直接接續現有程式碼。
 
 ---
 
@@ -98,13 +98,13 @@ M6 ── 監控 + 漂移偵測 + 治理 + Capstone          [2h] operate 思維
 - 可重現性要素：**程式碼版本（Git）+ 資料版本（DVC）+ 環境版本（Docker/lockfile）+ 隨機種子**。
 - 實驗追蹤該記什麼：params / metrics / artifacts / **model signature** / tags / lineage。
 - **超參搜尋演進**：手動 → grid/random → **貝氏最佳化（Optuna TPE）** → **pruning（ASHA/Hyperband）提早砍掉爛 trial** → **多目標（accuracy vs latency vs cost）**。
-- **HPO × 追蹤的關係**：每個 trial = 一個 MLflow run；Optuna 負責「探索」、MLflow 負責「記錄與比較」。AutoML（FLAML/AutoGluon）= HPO + 模型選擇的自動化封裝（對應你的 `autoML_template`）。
+- **HPO × 追蹤的關係**：每個 trial = 一個 MLflow run；Optuna 負責「探索」、MLflow 負責「記錄與比較」。AutoML（FLAML/AutoGluon）= HPO + 模型選擇的自動化封裝（本 repo 未收錄範例，屬延伸閱讀）。
 - Model Registry 與生命週期：Staging → Production → Archived，alias 與版本治理。
 - 訓練/服務偏差怎麼來、怎麼防。
 
-**動手 Lab（~75 min）**——擴充現有 `MLflow/basic` 與 `autoML_template`
-1. 用預測性維護結構化資料訓練 XGBoost，**MLflow 記錄 params/metrics/signature**（接 `09`、`10`、`13` 號 notebook）。
-2. **用 Optuna 自動調參**：寫 `objective(trial)` + `trial.suggest_*`，`study.optimize` 跑數十 trial，**每個 trial 自動寫成一個 MLflow run**；用 MLflow UI 比較收斂（接 `07`、`08`）。
+**動手 Lab（~75 min）**——擴充 `mlops-course/modules/m2-tracking-tuning-versioning/sandbox/`
+1. 用預測性維護結構化資料訓練 XGBoost，**MLflow 記錄 params/metrics/signature**（接沙盒 `mlflow/03_log_model.py`）。
+2. **用 Optuna 自動調參**：寫 `objective(trial)` + `trial.suggest_*`，`study.optimize` 跑數十 trial，**每個 trial 自動寫成一個 MLflow run**；用 MLflow UI 比較收斂（接沙盒 `optuna/02_mlflow_callback.py`、`optuna/03_pruning_asha.py`）。
 3. 開啟 **pruning**（ASHA）觀察提早終止對時間的節省；（選配）示範**多目標**：同時優化 AUC 與推論延遲。
 4. **加上 DVC**：把資料集與 `.pkl` 納入版本控制（同一 commit 一定拉到同一份資料）。
 5. 把最佳 trial 的模型註冊進 **Model Registry** 並打 `@champion` alias。
@@ -124,7 +124,7 @@ M6 ── 監控 + 漂移偵測 + 治理 + Capstone          [2h] operate 思維
 - 離線 store（訓練）vs 線上 store（低延遲推論）。
 - 把「資料前處理」升級成「**特徵管線**」：可參數化、可排程、可測試。
 
-**動手 Lab（~75 min）**——擴充現有 `MLOps/feat_test`
+**動手 Lab（~75 min）**——擴充 `mlops-course/modules/m3-feature-store/sandbox/`
 1. 用 Feast 定義設備感測器的 **time-series feature view**（滾動均值、振動 std 等）。
 2. `get_historical_features` 做 point-in-time 正確的訓練集（對照「錯誤做法」看指標虛高）。
 3. `materialize` 到線上 store，`get_online_features` 模擬即時推論。
@@ -163,7 +163,7 @@ M6 ── 監控 + 漂移偵測 + 治理 + Capstone          [2h] operate 思維
 
 **核心觀念（~50 min）**
 - CI/CD **vs CT**：ML 多了「資料變了要重訓」這條觸發路徑。
-- ML 專屬測試：資料驗證（schema/分布）、**模型行為測試**（不變性測試）、模型品質門檻（接 `15_models_validation_threshold`）。
+- ML 專屬測試：資料驗證（schema/分布）、**模型行為測試**（不變性測試）、模型品質門檻（接 capstone `src/training/evaluate.py` 的 `quality_gate` 與 `dvc.yaml` 評估 stage）。
 - **編排器選型（2026）**：Airflow（成熟）/ **ZenML**、**Metaflow**、Prefect（輕量 pythonic）/ Kubeflow Pipelines（K8s 重裝）。
 - 部署策略：Shadow / Canary / Blue-Green / A-B test。
 - IaC 概念（Terraform）讓環境可複製。

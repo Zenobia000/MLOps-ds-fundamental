@@ -2,7 +2,7 @@
 
 > **問題**：原 capstone 大綱以「完整專案視角」鋪陳，會在課程一開始就攤開大量尚未學過的工具（MLflow + Feast + BentoML + Prefect + Actions + Evidently），造成初學者**認知超載**——還不會用任何一個，卻被要求把六個接起來。
 > **原則**：完整專案是**專家的心智模型**，不是**初學者的學習路徑**。本文件把課程重排為漸進式，降低每一步的認知負荷。
-> **參照**：本 repo 的 `MLflow/basic/` 01→16 號 notebook 已示範正確做法——一次只加一個概念。本設計把同樣原則推廣到所有工具。
+> **參照**：本 repo 早期的 `MLflow/basic/` 01→16 號 notebook（已於教學骨架重構時移除）示範過正確做法——一次只加一個概念。本設計把同樣原則推廣到所有工具，落在各 `mlops-course/modules/mN-*/sandbox/` 的編號腳本。
 
 ---
 
@@ -64,7 +64,7 @@
 
 > 關鍵：**到階 12 才第一次「整合」**。在那之前，學生對每個工具都已有獨立的成功經驗，整合時面對的是「接線」而非「同時學六樣新東西」。
 >
-> **為什麼 Optuna 緊接 MLflow（階 2）**：HPO 的本質是「跑很多次實驗找最佳超參」，而每個 trial 就是一個 MLflow run——兩者天生互補。先學 MLflow 才有地方記錄 trial，再學 Optuna 才有東西自動產生大量 run。你 repo 的 `autoML_template` 正是這兩者的結合（HPO 是 AutoML 的引擎）。
+> **為什麼 Optuna 緊接 MLflow（階 2）**：HPO 的本質是「跑很多次實驗找最佳超參」，而每個 trial 就是一個 MLflow run——兩者天生互補。先學 MLflow 才有地方記錄 trial，再學 Optuna 才有東西自動產生大量 run。本 repo 早期的 `autoML_template`（已於教學骨架重構時移除）正是這兩者的結合（HPO 是 AutoML 的引擎）；同樣的組合現在落在 `mlops-course/modules/m2-tracking-tuning-versioning/sandbox/optuna/02_mlflow_callback.py`。
 
 ---
 
