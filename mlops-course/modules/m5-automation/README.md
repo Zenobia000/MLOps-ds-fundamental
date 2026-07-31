@@ -43,10 +43,14 @@
 
 ## 2. 沙盒步驟（Layer 1：照編號逐個跑，只學最小可用動詞）
 
+> **指令起點**：本檔所有路徑都相對 **`mlops-course/`**（放 `Makefile` 的那一層）。
+> `cd` 進沙盒跑完，記得 `cd` 回 `mlops-course/` 再接下一段（見本節結尾）。
+> Git 是例外——repo 根在再上一層，詳見[課程 README「指令從哪裡下」](../../README.md#指令從哪裡下)。
+
 每個沙盒彼此**不互相 import**，都能獨立執行。先把工具玩熟，再回 workspace 接。
 
 ```bash
-cd modules/m5-automation/sandbox
+cd mlops-course/modules/m5-automation/sandbox   # 從 repo 根出發
 ```
 
 **(1) Prefect：把兩支函式串成一個 flow**（只學 `@task` / `@flow` / 本地 run）
@@ -73,27 +77,28 @@ python -m pytest tests/ -v
 「push -> 跑 pytest -> 失敗就變紅」這條品質門檻。真實使用時把它複製到
 repo 根目錄的 `.github/workflows/`，GitHub 才會執行（README 有指令）。
 
-## 3. 整合任務（Layer 2：到 workspace 把這個工具接上去）
-
-回到 `workspace/`，把 M3/M4 累積的步驟編成 pipeline，並加上 CI gate：
+**(4) 跑完回到 `mlops-course/`**（下一節的 `make` 需要它）
 
 ```bash
-cd ../../workspace      # 你的專案主線（跨模組長大）
+cd ../../..      # sandbox → m5-automation → modules → mlops-course
+pwd              # 確認結尾是 /mlops-course
 ```
 
-TODO 提示：
+## 3. 整合任務（Layer 2：到 workspace 把這個工具接上去）
 
-- [ ] **用 Prefect 編排訓練流程**：把 workspace 既有的「載入特徵 -> 訓練 -> 評估」
-      三支函式各加 `@task`，再用一個 `@flow` 串起來（模式照搬 `sandbox/prefect/flow.py`）。
-- [ ] **加資料驗證 task**：在訓練前插一個 task，檢查輸入特徵的 schema 與值域，
-      不通過就讓 flow 失敗（對應「資料驗證」測試）。
-- [ ] **加品質門檻 gate**：評估後若 `accuracy < 門檻`，讓 flow 報錯而非繼續，
-      確保爛模型不會被往下游送（對應「品質門檻 gate」）。
-- [ ] **把 workspace 的測試接上 CI**：複製 `sandbox/github-actions/ci.yml` 到
-      repo 根目錄 `.github/workflows/`，把測試路徑改成 workspace 的 `tests/`，
-      push 後在 GitHub Actions 分頁確認變綠。
-- [ ] **（觀念題，不必實作）** 想一下：若要把新模型安全換上線，你會選 canary 還是
-      blue-green？把理由寫進 workspace 的 README。
+先解鎖填空模板：
+
+```bash
+make workspace-m5
+# 新增 flow.py、tests/test_pipeline.py
+```
+
+搜尋 `TODO(M5-`（對照 `sandbox/prefect/flow.py`）：
+
+- [ ] **TODO(M5-1～6)**：`@task` 載入 / 驗證 / 訓練 / `quality_gate`，再用 `@flow` 串起來
+- [ ] **TODO(M5-7～8)**：補 `tests/`，複製 `sandbox/github-actions/ci.yml` 到
+      repo 根 `.github/workflows/`，pytest 路徑指到 `workspace/tests/`
+- [ ] **（觀念題）** canary vs blue-green：理由寫進 workspace README
 
 ## 4. 卡住怎麼辦
 

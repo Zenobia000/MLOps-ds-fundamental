@@ -23,10 +23,14 @@
 
 四個最小可用動詞:**apply → get_historical_features → materialize → get_online_features**。
 
+> **指令起點**:本檔所有路徑都相對 **`mlops-course/`**(放 `Makefile` 的那一層)。
+> `cd` 進沙盒跑完,記得 `cd` 回 `mlops-course/` 再接下一段。
+> Git 是例外——repo 根在再上一層,詳見[課程 README「指令從哪裡下」](../../README.md#指令從哪裡下)。
+
 先進到沙盒並裝依賴(建議用乾淨 venv):
 
 ```bash
-cd modules/m3-feature-store/sandbox
+cd mlops-course/modules/m3-feature-store/sandbox   # 從 repo 根出發
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 ```
@@ -48,6 +52,14 @@ cd ..
 python 01_point_in_time_demo.py
 ```
 
+最後,用 notebook **親眼看見**上面第 1 節那張「錯誤做法 → 指標虛高」的表格:
+
+```bash
+jupyter lab 02_leakage_viz.ipynb
+
+cd ../../..   # ★ 跑完回到 mlops-course/(sandbox → m3-feature-store → modules)
+```
+
 各檔在教什麼:
 
 | 檔案 | 學到的最小動詞/概念 |
@@ -56,25 +68,47 @@ python 01_point_in_time_demo.py
 | `sandbox/feature_repo/feature_store.yaml` | `local` provider + `sqlite` 線上 store 的最小設定 |
 | `sandbox/feature_repo/feature_definition.py` | **Entity / FileSource / FeatureView** 三個核心物件 |
 | `sandbox/01_point_in_time_demo.py` | `get_historical_features` / `materialize` / `get_online_features` |
+| `sandbox/02_leakage_viz.ipynb` | **看見**時間穿越：時間軸圖 + 洩漏/正確兩版模型的 ROC 對照 |
 
 > 提醒:`sandbox/` 的每個檔都能獨立理解,彼此不互相 import。
+
+### 2-1　為什麼洩漏對照是 notebook,其餘是腳本?
+
+第 1 節那張表用文字告訴你「離線指標會虛高」,但**數字沒有並排出現,你不會真的有感**。
+`02_leakage_viz.ipynb` 把它變成可以看的東西:
+
+- **時間軸圖**:標出查詢時刻 T,綠點是你上線時真的有的讀值,紅叉是偷看的那一筆。
+- **兩條 ROC 曲線疊圖**:洩漏版 AUC **0.940** vs 正確版 **0.791**——**虛高 +0.149（19%）**。
+- **關鍵領悟**:正確版不是 0.5(亂猜),它仍有 0.79,來自機台的長期水準差異(真訊號)。
+  所以**「離線指標變差」不是退步,是終於誠實**。
+
+它用的是 `datasets/toy_sensors.csv`(5 台機器 × 150 小時)而不是本沙盒的 diabetes 資料——
+因為 diabetes **每位病患只有一列**,沒有時間維度可以穿越,做不出對照。
+
+其餘檔案維持腳本,原因很具體:`feature_definition.py` **必須是 Feast 能 import 的模組**,
+`00_prepare_data.py` 產出的 parquet 是要餵給 `feast apply` 的**檔案交付物**,
+兩者都不能是 notebook。判準見 [`docs/notebook-vs-script.md`](../../../docs/notebook-vs-script.md)。
 
 ---
 
 ## 3. 整合任務(Layer 2:把 Feast 接到 workspace/)
 
-到 `workspace/`,把「特徵」這一層接進你正在長大的專案主線。目標:讓訓練腳本不再直接讀 CSV,而是**透過 Feast 取特徵**。
+先解鎖填空模板:
 
-TODO 提示:
+```bash
+make workspace-m3
+# 新增 prepare_features.py、feature_repo/（已存在則 skip）
+```
 
-- [ ] **TODO 1**:在 `workspace/` 建一個 `feature_repo/`,把本沙盒的 `feature_store.yaml` 與 `feature_definition.py` 搬過去(路徑改成 workspace 的相對路徑)。
-- [ ] **TODO 2**:寫一支 `prepare_features.py`,用 m1/m2 已經在用的玩具資料產出帶 `event_timestamp` 的 parquet(沿用 `00_prepare_data.py` 的補時間戳手法)。
-- [ ] **TODO 3**:把 workspace 既有的「讀 CSV → 訓練」流程,改成 `store.get_historical_features(...)` 取訓練集;確認欄位與原本一致。
-- [ ] **TODO 4**:在訓練完後呼叫 `store.materialize(...)`,並寫一支極簡推論函式用 `store.get_online_features(...)` 取線上特徵。
-- [ ] **TODO 5**(進階):把 m2 的 MLflow run 串起來 —— 記錄「這次訓練用的 feature view 名稱與版本」,讓實驗可追溯到特徵定義。
+搜尋 `TODO(M3-` 依序填(對照本模組 sandbox):
 
-驗收標準:訓練與推論讀的是**同一組 feature view**,且訓練集是 point-in-time join 出來的(沒有時間穿越)。
+- [ ] **TODO(M3-1～3)**:`prepare_features.py` 產出帶 `event_timestamp` 的 parquet
+- [ ] **TODO(M3-4～7)**:`feature_store.yaml` / `feature_definition.py` 填完後 `feast apply`
+- [ ] **接訓練**:把「讀 CSV → 訓練」改成 `store.get_historical_features(...)`
+- [ ] **線上**:`store.materialize(...)` + `get_online_features(...)`
+- [ ] **進階**:MLflow 記錄本次使用的 feature view 名稱
 
+驗收標準:訓練與推論讀**同一組 feature view**,訓練集是 point-in-time join(沒有時間穿越)。
 ---
 
 ## 4. 卡住怎麼辦

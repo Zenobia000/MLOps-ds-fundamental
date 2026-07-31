@@ -3,7 +3,7 @@ drift_report.py — 階 11：用 Evidently 算「資料漂移」報告（Layer 1
 
 這個檔示範什麼
 ---------------
-把資料切成兩份：
+把資料**按時間**切成兩份（切法很關鍵，見 split_reference_current）：
   - reference（參考分布，想成「模型上線當時、訓練資料的長相」）
   - current  （當前分布，想成「線上現在進來的新資料」）
 然後「人工注入漂移」——刻意把某一欄的分布平移，模擬感測器老化 / 環境改變。
@@ -54,13 +54,18 @@ OUTPUT_HTML = HERE / "drift_report.html"
 def load_sensors() -> pd.DataFrame:
     """讀取玩具感測器資料；若檔案不存在則就地產生等價的玩具資料。
 
-    toy_sensors.csv 預期是極簡時序樣本，欄位類似：
-        timestamp, temperature, vibration, pressure
-    這裡只示範概念，不依賴特定欄位數量。
+    toy_sensors.csv 是極簡時序樣本，欄位：
+        machine_id, event_timestamp, temperature, vibration, current, failure
+    有時間欄時一律**按時間排序**後回傳——reference/current 必須是「不同時間」，
+    詳見 split_reference_current 的說明。
     """
     if DATASET.exists():
         print(f"[load] 讀取玩具資料：{DATASET}")
-        return pd.read_csv(DATASET)
+        df = pd.read_csv(DATASET)
+        if "event_timestamp" in df.columns:
+            df["event_timestamp"] = pd.to_datetime(df["event_timestamp"])
+            df = df.sort_values("event_timestamp").reset_index(drop=True)
+        return df
 
     # ---- fallback：資料還沒就位時，自己造一份，保證可獨立執行 ----
     print(f"[load] 找不到 {DATASET}，改用內建合成玩具資料（不影響教學概念）")
@@ -75,15 +80,32 @@ def load_sensors() -> pd.DataFrame:
     return df
 
 
-def split_reference_current(df: pd.DataFrame):
-    """把資料對半切成 reference / current 兩份 DataFrame。
+# 要監控的欄位：只取「上線後拿得到的感測器讀值」。
+# 刻意排除 machine_id（識別碼，不是分布）、event_timestamp（時間本身）、
+# failure（標籤——線上推論當下根本還沒有它，拿它算漂移是自欺欺人）。
+MONITORED_COLS = ["temperature", "vibration", "current"]
 
-    只取數值欄位來示範漂移（Evidently 對數值欄會用統計檢定比較分布）。
+
+def split_reference_current(df: pd.DataFrame):
+    """把資料切成 reference（過去）/ current（現在）兩份 DataFrame。
+
+    ★ 一定要按「時間」切，不能按列序切。
+      toy_sensors.csv 是「一台機器接一台機器」排序的，照列序對半切等於
+      **照機台切**——而不同機台的溫度基準天生就差好幾度。那樣切出來的
+      reference/current，比較的是「不同機器」而不是「不同時間」，
+      還沒注入任何漂移就會報 drift=True，監控從第一天就在說謊。
+      load_sensors 已先按時間排序，這裡才能安全地對半切。
+
+    只取 MONITORED_COLS（數值欄）比較分布——Evidently 對數值欄用統計檢定。
     """
-    numeric = df.select_dtypes(include="number").copy()
-    half = len(numeric) // 2
-    reference = numeric.iloc[:half].reset_index(drop=True)
-    current = numeric.iloc[half:].reset_index(drop=True)
+    cols = [c for c in MONITORED_COLS if c in df.columns]
+    if not cols:  # fallback 合成資料沒有這些欄名，退回「所有數值欄」
+        cols = list(df.select_dtypes(include="number").columns)
+
+    ordered = df[cols].reset_index(drop=True)
+    half = len(ordered) // 2
+    reference = ordered.iloc[:half].reset_index(drop=True)
+    current = ordered.iloc[half:].reset_index(drop=True)
     return reference, current
 
 
@@ -138,16 +160,26 @@ def build_drift_report(reference: pd.DataFrame, current: pd.DataFrame):
 
 
 def _extract_drift_summary_old(as_dict: dict) -> dict:
-    """從舊版 as_dict() 取出整體漂移結論。"""
+    """從舊版 as_dict() 取出整體結論 + 逐欄明細（哪幾欄漂了）。"""
+    summary = {
+        "dataset_drift": None, "n_drifted_columns": None,
+        "n_columns": None, "drift_share": None, "drifted_columns": [],
+    }
     for m in as_dict.get("metrics", []):
         if m.get("metric") == "DatasetDriftMetric":
             res = m.get("result", {})
-            return {
-                "dataset_drift": res.get("dataset_drift"),
-                "n_drifted_columns": res.get("number_of_drifted_columns"),
-                "n_columns": res.get("number_of_columns"),
-            }
-    return {"dataset_drift": None, "n_drifted_columns": None, "n_columns": None}
+            summary.update(
+                dataset_drift=res.get("dataset_drift"),
+                n_drifted_columns=res.get("number_of_drifted_columns"),
+                n_columns=res.get("number_of_columns"),
+                drift_share=res.get("drift_share"),
+            )
+        if m.get("metric") == "DataDriftTable":
+            by_col = m.get("result", {}).get("drift_by_columns", {})
+            summary["drifted_columns"] = [
+                name for name, info in by_col.items() if info.get("drift_detected")
+            ]
+    return summary
 
 
 def _extract_drift_summary_new(as_dict: dict) -> dict:
@@ -157,6 +189,8 @@ def _extract_drift_summary_new(as_dict: dict) -> dict:
         "dataset_drift": "drift" in text,  # 新版結構多變，這裡只做粗略提示
         "n_drifted_columns": None,
         "n_columns": None,
+        "drift_share": None,
+        "drifted_columns": [],
     }
 
 
@@ -178,11 +212,22 @@ def main():
     saved, summary = build_drift_report(reference, current)
 
     print("-" * 64)
-    drift = summary.get("dataset_drift")
-    print(f"[結果] 是否偵測到資料漂移 dataset_drift = {drift}")
+    # ★ 逐欄結果才是這個 demo 的重點：我們只推了一欄，就該只有那一欄被標記。
     if summary.get("n_drifted_columns") is not None:
-        print(f"[結果] 漂移欄位數 = {summary['n_drifted_columns']} / "
-              f"{summary['n_columns']}")
+        drifted = summary.get("drifted_columns") or []
+        print(f"[結果] 逐欄：{summary['n_drifted_columns']} / {summary['n_columns']} "
+              f"欄偵測到漂移" + (f" → {', '.join(drifted)}" if drifted else ""))
+
+    # ★ 整體旗標會是 False,這不是失敗——它有自己的門檻,務必看懂再往下走。
+    drift = summary.get("dataset_drift")
+    share = summary.get("drift_share")
+    print(f"[結果] 整體 dataset_drift = {drift}"
+          + (f"(門檻 drift_share={share}:要超過這個比例的欄位漂移才亮燈)" if share else ""))
+    if drift is False and summary.get("n_drifted_columns"):
+        print("        ↑ 注意:有欄位漂了但整體仍是 False,因為漂移欄位比例沒過門檻。")
+        print("          只看整體旗標會漏掉單欄漂移——生產環境請以逐欄結果為準,")
+        print("          或依風險承受度調低 drift_share。")
+
     if saved:
         print(f"[結果] HTML 報告已輸出：{OUTPUT_HTML}")
         print("        用瀏覽器打開它，對照看哪一欄的分布被推開了。")

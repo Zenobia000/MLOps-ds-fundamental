@@ -1,0 +1,10 @@
+# TODO(M3-4): 路徑確認為「相對本 feature_repo/」；需要時可改 project 名稱
+# 對照：modules/m3-feature-store/sandbox/feature_repo/feature_store.yaml
+
+project: workspace_feature_repo
+provider: local
+registry: data/registry.db
+online_store:
+    type: sqlite
+    path: data/online_store.db
+entity_key_serialization_version: 2

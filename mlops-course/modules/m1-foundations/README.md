@@ -9,12 +9,36 @@
 
 ## 2. 沙盒步驟（Layer 1：跑 `sandbox/`）
 
+> **指令起點**：本檔所有路徑都相對 **`mlops-course/`**（放 `Makefile` 的那一層）。
+> `cd` 進沙盒跑完，記得 `cd` 回 `mlops-course/` 再接下一段。
+> Git 是例外——repo 根在再上一層，詳見[課程 README「指令從哪裡下」](../../README.md#指令從哪裡下)。
+
 到本模組的 `sandbox/`，照編號逐個跑，一次只學一個最小可用動詞：
 
 ```bash
-cd modules/m1-foundations/sandbox
-python 01_baseline_iris.py
+cd mlops-course/modules/m1-foundations/sandbox   # 從 repo 根出發；已在 mlops-course/ 則去掉開頭
+
+jupyter lab 00_eda_iris.ipynb   # 先「看」資料：分布、類別平衡、可分性
+python 01_baseline_iris.py      # 再「固定」結果：可重現的 baseline
+
+cd ../../..                     # ★ 回到 mlops-course/（sandbox → m1-foundations → modules）
 ```
+
+### 2-0　為什麼這裡有一本 notebook、旁邊卻是腳本？
+
+這是本課程第一次示範**介質選擇**，值得停下來想三十秒：
+
+| | `00_eda_iris.ipynb` | `01_baseline_iris.py` |
+| :--- | :--- | :--- |
+| 誰在用 | **人**，互動式 | **機器**，無人值守 |
+| 目的 | 看懂資料長什麼樣 | 產出今天/明天/別人跑都一樣的數字 |
+| 為什麼是這個介質 | 理解來自**看見**——分布、重疊、相關性都是圖 | 主題是**可重現**，而亂序執行正是 notebook 最弱的地方 |
+
+> 判準一句話：**人在看資料 → notebook；機器無人值守在跑 → 檔案。**
+> 全課 33 個沙盒單元的逐一裁決見 [`docs/notebook-vs-script.md`](../../../docs/notebook-vs-script.md)。
+
+`00_eda_iris.ipynb` 會帶你看四件事，每一件都直接影響下一步的決策：
+類別平衡（決定 accuracy 能不能用）、特徵分布、花瓣散布圖（決定 baseline 選線性模型就夠）、相關性（花瓣長寬相關 0.96，特徵有冗餘）。
 
 `01_baseline_iris.py` 做的事（也只做這些）：
 
@@ -30,34 +54,54 @@ python 01_baseline_iris.py
 
 ## 3. 整合任務（Layer 2：到 `workspace/` 接上去）
 
-`workspace/` 是你**跨模組會一直長大**的主線專案。本模組的任務：把上面的 baseline 搬進 `workspace/`，當作整條 pipeline 的**主線起點**。之後每個模組的 B 段，都會在這份 baseline 上「接一個新工具」。
+`workspace/` 是你**跨模組會一直長大**的主線專案。本模組：把 sandbox 學到的 baseline **填進主線模板**，當作整條 pipeline 的起點。
 
-到 `workspace/` 建立你的第一版訓練腳本（TODO 提示）：
+在 `mlops-course/` 解鎖填空骨架（**不要從空白檔硬寫**）：
 
-```text
-workspace/
-└── train.py          # ← 你要建立的主線訓練腳本
+```bash
+pwd                 # 應該結尾是 /mlops-course，不是 .../sandbox
+make workspace-m1
+# 產生 workspace/train.py（已存在則跳過，不會蓋掉你的進度）
 ```
 
-`train.py` 需要做到（把沙盒學到的搬過來，並稍微「專案化」）：
+> 若出現 `make: *** No rule to make target` 或 `No such file or directory: Makefile`，
+> 就是你還停在沙盒資料夾裡——`cd` 回 `mlops-course/` 再跑一次。
 
-- [ ] **TODO**：讀 `datasets/iris.csv`（沿用沙盒的相對路徑寫法，別把資料複製進 workspace）。
-- [ ] **TODO**：`train_test_split` 設 `random_state=42`（seed 集中成一個常數，方便日後統一管理）。
-- [ ] **TODO**：訓 `LogisticRegression` 並印出 test accuracy（先求能跑、能重現，不求最佳）。
-- [ ] **TODO**：把這份 baseline 用 Git 版控起來（見下方 cheatsheet）——先開分支，再 commit。
-- [ ] **TODO（預留接口）**：在訓練結束處留一行註解 `# M2: 之後在這裡接 MLflow log_*`，標好下一個工具的接點。
+打開 `workspace/train.py`，搜尋 `TODO(M1-` 依序填（對照 `sandbox/01_baseline_iris.py`）：
 
-> 為什麼搬進 workspace？沙盒是「練工具、可丟可重來」；workspace 是「你真正長大的成品」。兩者實體分開，避免把「練習」和「組系統」搞混。
+- [ ] **TODO(M1-1)**：設定 `SEED`
+- [ ] **TODO(M1-2)**：`find_iris_csv`（注意 `parents` 層數與 sandbox 不同）
+- [ ] **TODO(M1-3)**：`load_iris`
+- [ ] **TODO(M1-4～6)**：`train_test_split` → 訓練 → 印 test accuracy
+- [ ] **Git**：先開分支再 commit（見下方 cheatsheet）
+- [ ] 保留檔尾 `# M2: 之後在這裡接 MLflow log_*`（下一模組接點）
+
+```bash
+python workspace/train.py   # 跑兩次，accuracy 必須一樣
+```
+
+> 為什麼搬進 workspace？沙盒是「練工具、可丟可重來」；workspace 是「你真正長大的成品」。模板只給骨架，關鍵邏輯仍要你自己填。
 
 ### 極簡 Git 工作流 cheatsheet
 
-階 0 只需要四個動詞就能把 baseline 安全版控起來：
+階 0 只需要四個動詞就能把 baseline 安全版控起來。
+
+> **先搞清楚 git 在管哪個範圍**：`mlops-course/` **不是**獨立的 git repo，
+> 它沒有自己的 `.git`。真正的 repo 根是**再上一層**的 `MLOps-ds-fundamental/`。
+> 所以：
+> - `git status` 會列出**整個 repo** 的變更（可能包含 `docs/`、`.github/` 等），不只 `mlops-course/`。看到別的目錄是正常的，不要以為自己改壞了什麼。
+> - git 指令在哪一層下都可以，但**檔案路徑相對你當下的位置**。下面這組是站在 `mlops-course/` 時的寫法。
+> - 開分支與 commit 影響整個 repo，不是只有這個模組。
+>
+> 用 `git rev-parse --show-toplevel` 可以隨時印出 repo 根在哪。
 
 ```bash
+cd mlops-course                 # 以下路徑以這一層為準（在 repo 根則路徑要加 mlops-course/ 前綴）
+
 git status                      # 我現在改了什麼？（動手前後都先看一眼）
 git branch feat/m1-baseline     # 開一條功能分支（鐵律：別在 main 上直接改）
 git switch feat/m1-baseline     # 切到該分支（舊版 Git 用 git checkout）
-git add workspace/train.py      # 把要納管的檔案放進暫存區
+git add workspace/train.py      # 把要納管的檔案放進暫存區（相對當前目錄）
 git commit -m "feat(m1): add iris baseline as workspace mainline"
 ```
 

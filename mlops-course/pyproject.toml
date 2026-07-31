@@ -43,8 +43,18 @@ dependencies = [
     "prefect>=2.16",
 
     # m6：監控・治理
-    "evidently>=0.4",
+    # 上限鎖在 <0.5：m6 沙盒（drift_report.py 與 drift_explore.ipynb）是對著
+    # 0.4.x 的 API（evidently.report / evidently.metric_preset）寫的，
+    # 0.6+ 改了模組路徑與 as_dict 結構會直接壞掉。
+    # 「鎖版本才可重現」正是本課程 m2 在教的事，這裡以身作則。
+    "evidently>=0.4,<0.5",
     "great-expectations>=0.18",
+
+    # 教學 notebook（m1 EDA / m2 Optuna 視覺化 / m3 洩漏對照 / m6 漂移探索）
+    # 介質選擇的判準見 docs/notebook-vs-script.md
+    "jupyterlab>=4.0",
+    "matplotlib>=3.7",
+    "plotly>=5.18",       # optuna.visualization 的繪圖後端
 ]
 
 [project.optional-dependencies]
@@ -53,6 +63,14 @@ dependencies = [
 advanced = [
     "ray[tune]>=2.9",
     "flaml>=2.1",
+]
+
+# 品質保證工具（CI 與本地 make nb-test / nb-verify 用）。
+# 安裝：pip install -e ".[dev]"
+dev = [
+    "pytest>=8.0",
+    "nbmake>=1.5",      # 實際執行 notebook，確認可從頭跑到尾
+    "nbstripout>=0.7",  # 清除 / 檢查 notebook 殘留輸出，保持 git diff 乾淨
 ]
 
 [project.urls]

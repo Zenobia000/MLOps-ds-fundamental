@@ -54,27 +54,58 @@
 
 ## 2. 沙盒步驟（Layer 1：照編號逐個跑，只學最小可用動詞）
 
+> **指令起點**：本檔所有路徑都相對 **`mlops-course/`**（放 `Makefile` 的那一層）。
+> `cd` 進沙盒跑完，記得 `cd` 回 `mlops-course/` 再接下一段。
+> Git 是例外——repo 根在再上一層，詳見[課程 README「指令從哪裡下」](../../README.md#指令從哪裡下)。
+
 > 一次一概念。每個檔都能獨立執行，彼此不 import。
 
 ### 2.1 Evidently 漂移報告
 
 ```bash
 # 先確認套件（course 通常已統一裝好）
-pip install "evidently>=0.4" pandas numpy scikit-learn
+pip install "evidently>=0.4,<0.5" pandas numpy scikit-learn matplotlib
 
-cd sandbox/evidently
-python drift_report.py
+cd mlops-course/modules/m6-monitoring-governance/sandbox/evidently   # 從 repo 根出發
+
+jupyter lab drift_explore.ipynb   # 人在看：調參數、決定監控哪幾欄、找出門檻
+python drift_report.py            # 機器在跑：把結論固定成每天自動執行的檢查
+
+cd ../../../..                    # ★ 回到 mlops-course/（evidently → sandbox → m6-… → modules）
 ```
 
-這支腳本會：
-1. 讀 `datasets/toy_sensors.csv`，切成 **reference / current** 兩份 DataFrame；
+**本模組是全課唯一兩種介質並存的地方**，因為監控天生同時需要「人的判斷」與「機器的重複執行」：
+
+| | `drift_explore.ipynb` | `drift_report.py` |
+| :--- | :--- | :--- |
+| 誰在用 | **人**，互動式 | **機器**，無人值守 |
+| 目的 | 決定「監控什麼、門檻多少」 | 執行既定檢查、輸出結論 |
+| 產出 | 理解 | 報告檔 + 可當 CI 門檻的結果 |
+
+> 一句話：**你在 notebook 想清楚要監控什麼，然後寫成腳本讓機器每天替你看。**
+> 判準見 [`docs/notebook-vs-script.md`](../../../docs/notebook-vs-script.md)。
+
+`drift_report.py` 做的事：
+1. 讀 `datasets/toy_sensors.csv`，**按時間**切成 **reference / current** 兩份 DataFrame；
 2. **人工注入漂移**——把某一欄整體平移（模擬感測器老化 = covariate drift）；
 3. 用 **`DataDriftPreset`** 產生 `drift_report.html`；
-4. 在終端機印出 `dataset_drift = True/False` 與漂移欄位數。
+4. 在終端機印出**逐欄**漂移結果與**整體** `dataset_drift`。
 
 > 你只要掌握這一個動詞：**ref vs current → DataDriftPreset → 報告**。
 > 用瀏覽器打開 `drift_report.html`，對照看「哪一欄的分布被推開了」。
 > （`datasets/toy_sensors.csv` 若還沒就位，腳本會自動產生等價玩具資料，照樣能跑。）
+
+#### 兩個一定要看懂的坑（notebook 裡有完整實驗）
+
+**坑 1：reference/current 一定要按「時間」切，不能按列序切。**
+`toy_sensors.csv` 是「一台機器接一台機器」排序的，照列序對半切等於**照機台切**——
+而各機台的平均溫度差了好幾度（55.9 ~ 63.6）。那樣切出來，**還沒注入任何漂移就會報 drift**，
+監控從第一天就在說謊。切對之後基線是乾淨的 0 欄漂移，注入才會亮。
+
+**坑 2：整體 `dataset_drift` 是 `False` 不代表沒事。**
+它預設要**超過半數欄位**都漂移才亮燈（`drift_share = 0.5`）。推一欄 → 1/3 沒過門檻 → 整體仍是 `False`。
+**只看整體旗標會漏掉單欄漂移**——生產環境請以逐欄結果為準，或依風險承受度調低 `drift_share`。
+一個關鍵欄位漂掉，往往就足以讓模型失效。
 
 ### 2.2 治理模板（填寫，不需執行）
 
@@ -89,19 +120,21 @@ python drift_report.py
 
 ## 3. 整合任務（Layer 2 → 解鎖 Layer 3）
 
-到 `workspace/`，把「監控 + 治理」接到你跨模組長大的專案上，**然後解鎖 capstone**。
+先解鎖填空模板，再接到主線、**解鎖 capstone**：
 
-TODO 提示：
+```bash
+make workspace-m6
+# 新增 monitoring/drift_report.py、monitoring/model_card_template.md
+```
 
-- [ ] **加漂移監控**：在 `workspace/` 存一份「上線當時的 reference 資料」，寫一支腳本對「新進資料」跑 `DataDriftPreset`，輸出報告。
-- [ ] **接成閉環**：把漂移偵測接進 M5 的 Prefect flow——`dataset_drift=True` 時觸發「重訓」或「告警」task。
-- [ ] **補治理文件**：替 `workspace/` 的模型填好 `model_card_template.md`，做一次 AI Act 自評。
-- [ ] **定義下線/重訓條件**：在 Model Card 的「適用邊界」寫清楚：漂移到什麼程度就重訓或下線。
-- [ ] **🔓 解鎖 capstone**：到這裡你已用過每一個工具。打開 `capstone/smart-factory-mlops/`，
-      把 M1–M6 的零件**自己決定怎麼組**，完成端到端智慧工廠 pipeline（監控四層 + 治理閉環）。
+搜尋 `TODO(M6-`（對照 `sandbox/evidently/drift_report.py`）：
 
-> 此時的重點不再是「學工具」，而是「**設計與權衡**」——為什麼這樣組、漂移門檻怎麼定、哪些要人為複核。
+- [ ] **TODO(M6-1～3)**：reference vs current → `DataDriftPreset` → HTML 報告
+- [ ] **TODO(M6-4)**：漂移接進 M5 Prefect（重訓或告警）
+- [ ] **TODO(M6-5～7)**：填完 `model_card_template.md`（含下線/重訓條件 + AI Act 自評）
+- [ ] **🔓 解鎖 capstone**：打開 `capstone/smart-factory-mlops/`，自行組端到端 pipeline
 
+> 此時重點是「**設計與權衡**」——門檻怎麼定、哪些要人為複核。
 ---
 
 ## 4. 卡住怎麼辦

@@ -14,6 +14,10 @@
 
 ## 2. 沙盒步驟（Layer 1：照編號逐個跑，只學最小可用動詞）
 
+> **指令起點**：本檔所有路徑都相對 **`mlops-course/`**（放 `Makefile` 的那一層）。
+> `cd` 進沙盒跑完，記得 `cd` 回 `mlops-course/` 再接下一段（見 2-4）。
+> Git 是例外——repo 根在再上一層，詳見[課程 README「指令從哪裡下」](../../README.md#指令從哪裡下)。
+
 玩具資料一律用 `datasets/iris.csv`（150 列、4 個數值特徵 + `target` 標籤）。
 每個 `.py` 都能**獨立執行**、彼此不互相 import。先裝工具：
 
@@ -24,7 +28,7 @@ pip install scikit-learn "mlflow>=2.9" optuna dvc
 ### 2-1　MLflow（階 1）— 最小可用動詞：`start_run / log_param / log_metric / log_model`
 
 ```bash
-cd modules/m2-tracking-tuning-versioning/sandbox/mlflow
+cd mlops-course/modules/m2-tracking-tuning-versioning/sandbox/mlflow   # 從 repo 根出發
 
 python 01_first_run.py      # 一個 run + log_param + log_metric（最小起手式）
 python 02_params_metrics.py # set_tracking_uri / set_experiment + 一次記多組 params/metrics
@@ -43,7 +47,26 @@ python 02_mlflow_callback.py  # ★核心：每個 trial 寫成一個 MLflow run
 python 03_pruning_asha.py     # 加 pruner 提早砍掉爛 trial；註解附「多目標」與 ASHA 選配
 
 mlflow ui                     # 進實驗 iris-optuna-hpo，展開 parent run 看 20 個 child run
+
+jupyter lab 04_visualization.ipynb   # 讀懂搜尋過程：收斂/重要性/平行座標/slice
 ```
+
+`04_visualization.ipynb` 是本模組唯一的 notebook，因為 `optuna.visualization` 產出的是
+**互動式 Plotly 圖**，而且這四張圖的用途不是好看，是**決定下一輪要怎麼調搜尋範圍**：
+
+| 圖 | 它回答的問題 | 你該做的事 |
+| :--- | :--- | :--- |
+| optimization history | 還有沒有進步空間？ | 紅線走平就停，別再燒預算 |
+| param importances | 誰在決定分數？ | 不重要的超參固定住 |
+| parallel coordinate | 好 trial 長什麼樣？ | 把範圍縮到深色線集中的區間 |
+| slice plot | 範圍設得對嗎？ | 最佳點貼邊界 → 往外擴 |
+
+> **為什麼 MLflow 那三支刻意不做成 notebook？**
+> 兩個理由。技術上，MLflow 的 run lifecycle 在 notebook 是經典陷阱——cell 中途報錯會留下
+> 未關閉的 run，下一次 `start_run()` 就錯誤地巢狀進去，教學現場很難除錯。
+> 更重要的是教學一致性：**本模組的主題是「可重現」，而亂序執行正是 notebook 最有名的失敗模式**。
+> 用一個會給出不同答案的介質去教「每次都要一樣」，訊息會自我矛盾。
+> 完整判準見 [`docs/notebook-vs-script.md`](../../../docs/notebook-vs-script.md)。
 
 ### 2-3　DVC（階 3）— 最小可用動詞：`init / add / push / checkout`
 
@@ -55,6 +78,15 @@ cd ../dvc
 # 體會「同一個 git commit 永遠拉到同一份資料」。
 ```
 
+### 2-4　跑完回到 `mlops-course/`
+
+上面三段一路 `cd` 進了 `sandbox/dvc/`，下一節的 `make` 需要回到有 `Makefile` 的那層：
+
+```bash
+cd ../../../..      # dvc → sandbox → m2-… → modules → mlops-course
+pwd                 # 確認結尾是 /mlops-course
+```
+
 > 小提醒：新版 MLflow 對「本地檔案紀錄（`./mlruns`）」預設會擋，沙盒腳本已在檔頭用
 > `MLFLOW_ALLOW_FILE_STORE=true` 明確允許，零設定即可跑。
 
@@ -62,18 +94,26 @@ cd ../dvc
 
 ## 3. 整合任務（Layer 2：到 `workspace/` 把工具接上去）
 
-把這三個工具接到你在 M1 建好的 baseline 上。到 `mlops-course/workspace/` 裡：
+先解鎖填空模板（需已有 `workspace/train.py`）：
 
-- [ ] **TODO（MLflow）**：把 M1 的訓練腳本包進 `with mlflow.start_run():`，
-      `log_param` 記超參、`log_metric` 記 accuracy/f1、`log_model` 存模型 + signature。
-- [ ] **TODO（Optuna）**：把固定超參改成 `objective(trial)`，用 `study.optimize` 自動找；
-      **每個 trial 用 nested run 寫進 MLflow**，最後把 `best_params` 記在 parent run。
-- [ ] **TODO（DVC）**：對 `workspace/` 用到的訓練資料 `dvc init / add / push`，
-      把 `.dvc` 指標檔 commit 進 Git，讓「程式碼版本」對應「資料版本」。
+```bash
+make workspace-m2
+# 新增 train_tracking.py、conf/params.yaml（已存在則 skip）
+```
 
-> 驗收：在 `mlflow ui` 看得到你 workspace 的實驗；`git log` 的每個 commit 都能用
-> `dvc checkout` 還原出當時的資料。
+打開 `workspace/train_tracking.py`，搜尋 `TODO(M2-`（對照本模組 sandbox）：
 
+- [ ] **TODO(M2-1)**：`start_run` + `log_param` / `log_metric` / `log_model` + signature
+- [ ] **TODO(M2-2～3)**：Optuna `objective` + nested run；`best_params` 寫進 parent run
+- [ ] **TODO（DVC，CLI）**：對訓練資料 `dvc init / add`，把 `.dvc` commit 進 Git
+- [ ] **選填**：讓訓練改讀 `conf/params.yaml`
+
+```bash
+python workspace/train_tracking.py
+make mlflow-ui
+```
+
+> 驗收：MLflow UI 看得到 experiment；`git log` 的 commit 能對應 DVC 資料版本。
 ---
 
 ## 4. 卡住怎麼辦

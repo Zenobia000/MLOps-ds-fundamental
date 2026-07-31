@@ -37,6 +37,25 @@
 
 > 技能階梯的完整定義見 `docs/`（`teaching-progression.md`）。每一階只加**一個**新工具，且假設前面都已熟悉。每個工具初次接觸**只教 3–5 個核心動詞**，進階功能全部延後——「現在不用學完，之後需要時會回來」。
 
+### 沙盒裡的兩種介質：notebook 與腳本
+
+沙盒不是清一色的 `.py`。有 4 個單元刻意做成 notebook，判準只有一句話：
+
+> **人在看資料 → notebook；機器無人值守在跑 → 檔案。**
+
+| Notebook | 在哪 | 為什麼是 notebook |
+| :--- | :--- | :--- |
+| `00_eda_iris.ipynb` | m1 | 分布、平衡、可分性——理解來自看見 |
+| `04_visualization.ipynb` | m2 | Optuna 的互動圖是用來**決定下一輪搜尋範圍**的 |
+| `02_leakage_viz.ipynb` | m3 | 時間穿越是對照式教材：洩漏 AUC 0.940 vs 正確 0.791 |
+| `drift_explore.ipynb` | m6 | 漂移分析本質就是資料分析 |
+
+其餘 29 個單元維持腳本／指令。**m4 是分水嶺**——它的主題正是「把模型**從 notebook 變成**服務」，
+所以那之後不用 notebook 不是限制，是課程訊息本身。**m6 會盪回來**，是唯一兩種介質並存的模組。
+
+逐一裁決與工程前提見 [`docs/notebook-vs-script.md`](../docs/notebook-vs-script.md)。
+notebook 的品質由 CI 保證：`make nb-test` 實際執行每一本，`make nb-verify` 擋下帶輸出的檔案。
+
 ---
 
 ## 3. 如何「漸進解鎖」（不要一開始就看到全部）
@@ -71,6 +90,7 @@ mlops-course/
 │   ├── m5-automation/                     # Prefect + GitHub Actions
 │   └── m6-monitoring-governance/          # Evidently + 治理 + 收尾
 │       每個 mN-*/ 內部一致：README.md（五段格式）+ sandbox/（最小可跑範例）
+│       sandbox/ 內多為 .py 腳本；m1/m2/m3/m6 各有一本 .ipynb（見上方「兩種介質」）
 │
 ├── workspace/         # ★ Layer 2：你的漸進整合主線（跨模組累積長大，只有一份）
 │
@@ -88,6 +108,39 @@ mlops-course/
 | `workspace/` | 你長大的專案 | 每個模組的整合任務都往這裡加工具 |
 | `checkpoints/` | 已知良好快照 | 卡住時 `cp -r checkpoints/after-mN/* workspace/` 重置 |
 | `capstone/` | 完整生產骨架 | **m6 才解鎖** |
+
+### 指令從哪裡下
+
+課程文件裡的指令有兩種起點，**搞混是最常見的卡關原因**：
+
+| 指令 | 起點 | 例子 |
+| :--- | :--- | :--- |
+| `make ...`、`python workspace/...`、`cp -r checkpoints/...` | **`mlops-course/`**（放 `Makefile` 的這一層） | `make workspace-m1` |
+| 沙盒範例（`python 01_*.py`、`uvicorn app:app`、`feast apply`） | **該沙盒自己的資料夾** | 先 `cd modules/m1-foundations/sandbox` |
+
+規則就一句：**各模組 README 裡的路徑一律相對 `mlops-course/`**。
+`cd` 進沙盒跑完之後，記得 `cd` 回 `mlops-course/` 再接下一段——
+不回來的話，`make workspace-mN` 會因為那層沒有 `Makefile` 而失敗：
+
+```bash
+cd mlops-course                       # ← 每一段的起點
+cd modules/m1-foundations/sandbox     # 進沙盒
+python 01_baseline_iris.py
+cd ../../..                           # ← 回到 mlops-course/（三層：sandbox → m1 → modules）
+make workspace-m1                     # 這時才找得到 Makefile
+```
+
+> 隨時用 `pwd` 確認你在哪一層；`make help` 只有在 `mlops-course/` 下才跑得動，
+> 可以拿它當「我站對地方了嗎」的快速檢查。
+
+**Git 是唯一的例外。** git 的 repo 根目錄是**再上一層**的 `MLOps-ds-fundamental/`，
+`mlops-course/` 只是它底下的一個子資料夾（沒有自己的 `.git`）。這代表：
+
+- `git status` 會列出**整個 repo** 的變更，不只 `mlops-course/` 的——看到別的目錄出現在清單裡是正常的。
+- git 指令**在任何一層下都可以**，但你給的檔案路徑是相對「你當下所在的位置」。
+  在 `mlops-course/` 下 `git add workspace/train.py` 是對的；在 repo 根則要寫
+  `git add mlops-course/workspace/train.py`。
+- 開分支、commit 影響的是整個 repo，不是單一模組。
 
 ---
 
