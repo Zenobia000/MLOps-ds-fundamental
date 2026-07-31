@@ -14,6 +14,10 @@
 
 ## 2. 沙盒步驟（Layer 1：照編號逐個跑，只學最小可用動詞）
 
+> **指令起點**：本檔所有路徑都相對 **`mlops-course/`**（放 `Makefile` 的那一層）。
+> `cd` 進沙盒跑完，記得 `cd` 回 `mlops-course/` 再接下一段（見 2-4）。
+> Git 是例外——repo 根在再上一層，詳見[課程 README「指令從哪裡下」](../../README.md#指令從哪裡下)。
+
 玩具資料一律用 `datasets/iris.csv`（150 列、4 個數值特徵 + `target` 標籤）。
 每個 `.py` 都能**獨立執行**、彼此不互相 import。先裝工具：
 
@@ -24,7 +28,7 @@ pip install scikit-learn "mlflow>=2.9" optuna dvc
 ### 2-1　MLflow（階 1）— 最小可用動詞：`start_run / log_param / log_metric / log_model`
 
 ```bash
-cd modules/m2-tracking-tuning-versioning/sandbox/mlflow
+cd mlops-course/modules/m2-tracking-tuning-versioning/sandbox/mlflow   # 從 repo 根出發
 
 python 01_first_run.py      # 一個 run + log_param + log_metric（最小起手式）
 python 02_params_metrics.py # set_tracking_uri / set_experiment + 一次記多組 params/metrics
@@ -72,6 +76,15 @@ jupyter lab 04_visualization.ipynb   # 讀懂搜尋過程：收斂/重要性/平
 cd ../dvc
 # 打開 01_version_a_csv.md，照步驟把 iris.csv 做版本化，
 # 體會「同一個 git commit 永遠拉到同一份資料」。
+```
+
+### 2-4　跑完回到 `mlops-course/`
+
+上面三段一路 `cd` 進了 `sandbox/dvc/`，下一節的 `make` 需要回到有 `Makefile` 的那層：
+
+```bash
+cd ../../../..      # dvc → sandbox → m2-… → modules → mlops-course
+pwd                 # 確認結尾是 /mlops-course
 ```
 
 > 小提醒：新版 MLflow 對「本地檔案紀錄（`./mlruns`）」預設會擋，沙盒腳本已在檔頭用

@@ -37,7 +37,19 @@
 
 ## 2. 沙盒步驟(Layer 1:照編號逐個跑,一次一工具)
 
+> **指令起點**:本檔的 `sandbox/...` 路徑都相對 **`mlops-course/modules/m4-serving/`**;
+> 而下一節的 `make` 要在 **`mlops-course/`**(放 `Makefile` 的那一層)下。
+> Git 是例外——repo 根在更上層,詳見[課程 README「指令從哪裡下」](../../README.md#指令從哪裡下)。
+
 每個沙盒都「單檔自足、現訓玩具模型」,彼此不 import。各資料夾內有自己的 README 與 `requirements.txt`。
+
+**表格最右欄的指令一律要先 `cd` 進該沙盒資料夾再下**,例如:
+
+```bash
+cd mlops-course/modules/m4-serving/sandbox/01_fastapi   # 從 repo 根出發
+uvicorn app:app --port 8000
+# 換下一個沙盒前先 cd ..，全部跑完用 cd ../../../.. 回到 mlops-course/
+```
 
 | 編號 | 資料夾 | 學的動詞 | 怎麼起 |
 | :--- | :--- | :--- | :--- |

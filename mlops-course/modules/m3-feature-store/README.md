@@ -23,10 +23,14 @@
 
 四個最小可用動詞:**apply → get_historical_features → materialize → get_online_features**。
 
+> **指令起點**:本檔所有路徑都相對 **`mlops-course/`**(放 `Makefile` 的那一層)。
+> `cd` 進沙盒跑完,記得 `cd` 回 `mlops-course/` 再接下一段。
+> Git 是例外——repo 根在再上一層,詳見[課程 README「指令從哪裡下」](../../README.md#指令從哪裡下)。
+
 先進到沙盒並裝依賴(建議用乾淨 venv):
 
 ```bash
-cd modules/m3-feature-store/sandbox
+cd mlops-course/modules/m3-feature-store/sandbox   # 從 repo 根出發
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 ```
@@ -52,6 +56,8 @@ python 01_point_in_time_demo.py
 
 ```bash
 jupyter lab 02_leakage_viz.ipynb
+
+cd ../../..   # ★ 跑完回到 mlops-course/(sandbox → m3-feature-store → modules)
 ```
 
 各檔在教什麼:

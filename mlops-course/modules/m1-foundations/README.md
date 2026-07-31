@@ -9,13 +9,19 @@
 
 ## 2. 沙盒步驟（Layer 1：跑 `sandbox/`）
 
+> **指令起點**：本檔所有路徑都相對 **`mlops-course/`**（放 `Makefile` 的那一層）。
+> `cd` 進沙盒跑完，記得 `cd` 回 `mlops-course/` 再接下一段。
+> Git 是例外——repo 根在再上一層，詳見[課程 README「指令從哪裡下」](../../README.md#指令從哪裡下)。
+
 到本模組的 `sandbox/`，照編號逐個跑，一次只學一個最小可用動詞：
 
 ```bash
-cd modules/m1-foundations/sandbox
+cd mlops-course/modules/m1-foundations/sandbox   # 從 repo 根出發；已在 mlops-course/ 則去掉開頭
 
 jupyter lab 00_eda_iris.ipynb   # 先「看」資料：分布、類別平衡、可分性
 python 01_baseline_iris.py      # 再「固定」結果：可重現的 baseline
+
+cd ../../..                     # ★ 回到 mlops-course/（sandbox → m1-foundations → modules）
 ```
 
 ### 2-0　為什麼這裡有一本 notebook、旁邊卻是腳本？
@@ -53,9 +59,13 @@ python 01_baseline_iris.py      # 再「固定」結果：可重現的 baseline
 在 `mlops-course/` 解鎖填空骨架（**不要從空白檔硬寫**）：
 
 ```bash
+pwd                 # 應該結尾是 /mlops-course，不是 .../sandbox
 make workspace-m1
 # 產生 workspace/train.py（已存在則跳過，不會蓋掉你的進度）
 ```
+
+> 若出現 `make: *** No rule to make target` 或 `No such file or directory: Makefile`，
+> 就是你還停在沙盒資料夾裡——`cd` 回 `mlops-course/` 再跑一次。
 
 打開 `workspace/train.py`，搜尋 `TODO(M1-` 依序填（對照 `sandbox/01_baseline_iris.py`）：
 
@@ -74,13 +84,24 @@ python workspace/train.py   # 跑兩次，accuracy 必須一樣
 
 ### 極簡 Git 工作流 cheatsheet
 
-階 0 只需要四個動詞就能把 baseline 安全版控起來：
+階 0 只需要四個動詞就能把 baseline 安全版控起來。
+
+> **先搞清楚 git 在管哪個範圍**：`mlops-course/` **不是**獨立的 git repo，
+> 它沒有自己的 `.git`。真正的 repo 根是**再上一層**的 `MLOps-ds-fundamental/`。
+> 所以：
+> - `git status` 會列出**整個 repo** 的變更（可能包含 `docs/`、`.github/` 等），不只 `mlops-course/`。看到別的目錄是正常的，不要以為自己改壞了什麼。
+> - git 指令在哪一層下都可以，但**檔案路徑相對你當下的位置**。下面這組是站在 `mlops-course/` 時的寫法。
+> - 開分支與 commit 影響整個 repo，不是只有這個模組。
+>
+> 用 `git rev-parse --show-toplevel` 可以隨時印出 repo 根在哪。
 
 ```bash
+cd mlops-course                 # 以下路徑以這一層為準（在 repo 根則路徑要加 mlops-course/ 前綴）
+
 git status                      # 我現在改了什麼？（動手前後都先看一眼）
 git branch feat/m1-baseline     # 開一條功能分支（鐵律：別在 main 上直接改）
 git switch feat/m1-baseline     # 切到該分支（舊版 Git 用 git checkout）
-git add workspace/train.py      # 把要納管的檔案放進暫存區
+git add workspace/train.py      # 把要納管的檔案放進暫存區（相對當前目錄）
 git commit -m "feat(m1): add iris baseline as workspace mainline"
 ```
 

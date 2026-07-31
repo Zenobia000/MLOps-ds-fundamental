@@ -54,6 +54,10 @@
 
 ## 2. 沙盒步驟（Layer 1：照編號逐個跑，只學最小可用動詞）
 
+> **指令起點**：本檔所有路徑都相對 **`mlops-course/`**（放 `Makefile` 的那一層）。
+> `cd` 進沙盒跑完，記得 `cd` 回 `mlops-course/` 再接下一段。
+> Git 是例外——repo 根在再上一層，詳見[課程 README「指令從哪裡下」](../../README.md#指令從哪裡下)。
+
 > 一次一概念。每個檔都能獨立執行，彼此不 import。
 
 ### 2.1 Evidently 漂移報告
@@ -62,10 +66,12 @@
 # 先確認套件（course 通常已統一裝好）
 pip install "evidently>=0.4,<0.5" pandas numpy scikit-learn matplotlib
 
-cd sandbox/evidently
+cd mlops-course/modules/m6-monitoring-governance/sandbox/evidently   # 從 repo 根出發
 
 jupyter lab drift_explore.ipynb   # 人在看：調參數、決定監控哪幾欄、找出門檻
 python drift_report.py            # 機器在跑：把結論固定成每天自動執行的檢查
+
+cd ../../../..                    # ★ 回到 mlops-course/（evidently → sandbox → m6-… → modules）
 ```
 
 **本模組是全課唯一兩種介質並存的地方**，因為監控天生同時需要「人的判斷」與「機器的重複執行」：

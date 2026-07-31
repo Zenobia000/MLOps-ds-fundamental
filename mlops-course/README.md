@@ -109,6 +109,39 @@ mlops-course/
 | `checkpoints/` | 已知良好快照 | 卡住時 `cp -r checkpoints/after-mN/* workspace/` 重置 |
 | `capstone/` | 完整生產骨架 | **m6 才解鎖** |
 
+### 指令從哪裡下
+
+課程文件裡的指令有兩種起點，**搞混是最常見的卡關原因**：
+
+| 指令 | 起點 | 例子 |
+| :--- | :--- | :--- |
+| `make ...`、`python workspace/...`、`cp -r checkpoints/...` | **`mlops-course/`**（放 `Makefile` 的這一層） | `make workspace-m1` |
+| 沙盒範例（`python 01_*.py`、`uvicorn app:app`、`feast apply`） | **該沙盒自己的資料夾** | 先 `cd modules/m1-foundations/sandbox` |
+
+規則就一句：**各模組 README 裡的路徑一律相對 `mlops-course/`**。
+`cd` 進沙盒跑完之後，記得 `cd` 回 `mlops-course/` 再接下一段——
+不回來的話，`make workspace-mN` 會因為那層沒有 `Makefile` 而失敗：
+
+```bash
+cd mlops-course                       # ← 每一段的起點
+cd modules/m1-foundations/sandbox     # 進沙盒
+python 01_baseline_iris.py
+cd ../../..                           # ← 回到 mlops-course/（三層：sandbox → m1 → modules）
+make workspace-m1                     # 這時才找得到 Makefile
+```
+
+> 隨時用 `pwd` 確認你在哪一層；`make help` 只有在 `mlops-course/` 下才跑得動，
+> 可以拿它當「我站對地方了嗎」的快速檢查。
+
+**Git 是唯一的例外。** git 的 repo 根目錄是**再上一層**的 `MLOps-ds-fundamental/`，
+`mlops-course/` 只是它底下的一個子資料夾（沒有自己的 `.git`）。這代表：
+
+- `git status` 會列出**整個 repo** 的變更，不只 `mlops-course/` 的——看到別的目錄出現在清單裡是正常的。
+- git 指令**在任何一層下都可以**，但你給的檔案路徑是相對「你當下所在的位置」。
+  在 `mlops-course/` 下 `git add workspace/train.py` 是對的；在 repo 根則要寫
+  `git add mlops-course/workspace/train.py`。
+- 開分支、commit 影響的是整個 repo，不是單一模組。
+
 ---
 
 ## 5. 從這裡開始

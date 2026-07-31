@@ -43,10 +43,14 @@
 
 ## 2. 沙盒步驟（Layer 1：照編號逐個跑，只學最小可用動詞）
 
+> **指令起點**：本檔所有路徑都相對 **`mlops-course/`**（放 `Makefile` 的那一層）。
+> `cd` 進沙盒跑完，記得 `cd` 回 `mlops-course/` 再接下一段（見本節結尾）。
+> Git 是例外——repo 根在再上一層，詳見[課程 README「指令從哪裡下」](../../README.md#指令從哪裡下)。
+
 每個沙盒彼此**不互相 import**，都能獨立執行。先把工具玩熟，再回 workspace 接。
 
 ```bash
-cd modules/m5-automation/sandbox
+cd mlops-course/modules/m5-automation/sandbox   # 從 repo 根出發
 ```
 
 **(1) Prefect：把兩支函式串成一個 flow**（只學 `@task` / `@flow` / 本地 run）
@@ -72,6 +76,13 @@ python -m pytest tests/ -v
 打開 `github-actions/ci.yml` 對照 `github-actions/README.md`，理解
 「push -> 跑 pytest -> 失敗就變紅」這條品質門檻。真實使用時把它複製到
 repo 根目錄的 `.github/workflows/`，GitHub 才會執行（README 有指令）。
+
+**(4) 跑完回到 `mlops-course/`**（下一節的 `make` 需要它）
+
+```bash
+cd ../../..      # sandbox → m5-automation → modules → mlops-course
+pwd              # 確認結尾是 /mlops-course
+```
 
 ## 3. 整合任務（Layer 2：到 workspace 把這個工具接上去）
 
