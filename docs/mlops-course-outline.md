@@ -62,7 +62,7 @@
 
 ```
 M1 ── MLOps 全景 + 成熟度模型 (2026)            [2h] 建立心智模型
-M2 ── 實驗管理 + 可重現性 (MLflow + DVC)        [2h] 結構化案例｜接現有 MLflow
+M2 ── 實驗管理 + 自動調參 + 可重現性             [2h] 結構化案例｜MLflow + Optuna + DVC
 M3 ── 特徵工程 + 特徵商店 (Feast) + 訓練管線     [2h] 時序案例｜接現有 Feast
 M4 ── 模型打包 + 服務化 (Docker/BentoML/Triton)  [2h] 影像案例｜PyTorch CV
 M5 ── CI/CD/CT 自動化 + 編排 (Actions/ZenML)     [2h] 串成一條自動管線
@@ -98,26 +98,33 @@ M6 ── 監控 + 漂移偵測 + 治理 + Capstone          [2h] operate 思維
 
 ---
 
-### Module 2 — 實驗管理與可重現性｜2h ｜🔧 結構化案例
+### Module 2 — 實驗管理、自動調參與可重現性｜2h ｜🔧 結構化案例
 
-**學習目標**：任何一次實驗都能被別人一鍵重現，並在數百次 run 中找到最佳模型。
+**學習目標**：任何一次實驗都能被別人一鍵重現，並用**自動調參**在大量 run 中系統性找到最佳模型。
 
 **核心觀念（~45 min）**
 
 - 可重現性要素：**程式碼版本（Git）+ 資料版本（DVC）+ 環境版本（Docker/lockfile）+ 隨機種子**。
 - 實驗追蹤該記什麼：params / metrics / artifacts / **model signature** / tags / lineage。
+- **超參搜尋演進**：手動 → grid/random → **貝氏最佳化（Optuna TPE）** → **pruning（ASHA/Hyperband）提早砍掉爛 trial** → **多目標（accuracy vs latency vs cost）**。
+- **HPO × 追蹤的關係**：每個 trial = 一個 MLflow run；Optuna 負責「探索」、MLflow 負責「記錄與比較」。兩者合起來就是 AutoML 的引擎。AutoML（FLAML/AutoGluon）= HPO + 模型選擇的自動化封裝（本 repo 未收錄範例，屬延伸閱讀）。
 - Model Registry 與生命週期：Staging → Production → Archived，alias 與版本治理。
 - 訓練/服務偏差怎麼來、怎麼防。
 
 **動手 Lab（~75 min）**——擴充 `mlops-course/modules/m2-tracking-tuning-versioning/sandbox/`
 
 1. 用預測性維護結構化資料訓練 XGBoost，**MLflow 記錄 params/metrics/signature**（接沙盒 `mlflow/03_log_model.py`）。
-2. 跑多組 run，用 MLflow UI 比較、挑最佳（接沙盒 `mlflow/02_params_metrics.py`、`optuna/02_mlflow_callback.py`）。
-3. **加上 DVC**：把資料集與 `.pkl` 納入版本控制（同一 commit 一定拉到同一份資料）。
-4. 把最佳模型註冊進 **Model Registry** 並打 `@champion` alias。
+2. **用 Optuna 自動調參**：寫 `objective(trial)` + `trial.suggest_*`，`study.optimize` 跑數十 trial，**每個 trial 自動寫成一個 MLflow run**（nested run）；用 MLflow UI 比較收斂（接沙盒 `optuna/01_objective_basic.py`、`optuna/02_mlflow_callback.py`）。
+3. 開啟 **pruning**（ASHA）觀察提早終止對時間的節省；（選配）示範**多目標**：同時優化 AUC 與推論延遲（接沙盒 `optuna/03_pruning_asha.py`）。
+4. **讀懂搜尋過程**：用 `optuna.visualization` 的收斂歷史／超參重要性／平行座標／slice 四張圖，決定下一輪要怎麼縮範圍（接沙盒 notebook `optuna/04_visualization.ipynb`）。
+5. **加上 DVC**：把資料集與 `.pkl` 納入版本控制（同一 commit 一定拉到同一份資料）。
+6. 把最佳 trial 的模型註冊進 **Model Registry** 並打 `@champion` alias。
 
-**工具**：MLflow 3.x、DVC、XGBoost、Git
-**對應趨勢**：資料版本化、lineage 為治理與審計鋪路。
+> **介質提醒**：第 4 步是本模組唯一的 notebook（互動圖要用眼睛讀）；其餘步驟一律腳本——
+> 本模組主題是可重現，而亂序執行正是 notebook 最弱的地方。判準見 [`notebook-vs-script.md`](notebook-vs-script.md)。
+
+**工具**：MLflow 3.x、**Optuna**、DVC、XGBoost、Git（進階：Ray Tune 分散式、FLAML/AutoGluon AutoML）
+**對應趨勢**：自動調參成標配、多目標 HPO 呼應成本/延遲 KPI、資料版本化為治理鋪路。
 
 ---
 
@@ -228,6 +235,7 @@ M6 ── 監控 + 漂移偵測 + 治理 + Capstone          [2h] operate 思維
 | ----- | --------------------------- | -------------------------------- |
 | 版本控制  | Git + **DVC**               | LakeFS、Delta Lake                |
 | 實驗追蹤  | **MLflow 3.x**              | W&B、Neptune                      |
+| 超參調校  | **Optuna**（TPE + pruning）   | Ray Tune、FLAML/AutoGluon（AutoML） |
 | 特徵商店  | **Feast**                   | Tecton、Featureform               |
 | 編排    | **ZenML / Prefect**         | Airflow、Kubeflow、Metaflow        |
 | 服務化   | **BentoML**                 | Triton、KServe、Ray Serve、FastAPI  |
@@ -263,7 +271,8 @@ M6 ── 監控 + 漂移偵測 + 治理 + Capstone          [2h] operate 思維
 
 - Python 3.11+、Docker、Git
 - （CV 模組）建議一張 GPU；無 GPU 可改用較小模型或 CPU + 量化推論
-- 套件：`mlflow`, `dvc`, `feast`, `xgboost`, `torch`, `torchvision`, `onnxruntime`, `bentoml`, `evidently`, `prefect`/`zenml`, `great-expectations`
+- 套件：`mlflow`, `optuna`, `dvc`, `feast`, `xgboost`, `torch`, `torchvision`, `onnxruntime`, `bentoml`, `evidently`, `prefect`/`zenml`, `great-expectations`（進階：`ray[tune]`, `flaml`）
+- Notebook 工具鏈：`jupyterlab`, `matplotlib`, `plotly`；品質檢查另裝 `pip install -e ".[dev]"`（`nbmake`, `nbstripout`）
 
 ## 附錄 B：延伸閱讀
 
