@@ -114,19 +114,21 @@ python drift_report.py            # 機器在跑：把結論固定成每天自�
 
 ## 3. 整合任務（Layer 2 → 解鎖 Layer 3）
 
-到 `workspace/`，把「監控 + 治理」接到你跨模組長大的專案上，**然後解鎖 capstone**。
+先解鎖填空模板，再接到主線、**解鎖 capstone**：
 
-TODO 提示：
+```bash
+make workspace-m6
+# 新增 monitoring/drift_report.py、monitoring/model_card_template.md
+```
 
-- [ ] **加漂移監控**：在 `workspace/` 存一份「上線當時的 reference 資料」，寫一支腳本對「新進資料」跑 `DataDriftPreset`，輸出報告。
-- [ ] **接成閉環**：把漂移偵測接進 M5 的 Prefect flow——`dataset_drift=True` 時觸發「重訓」或「告警」task。
-- [ ] **補治理文件**：替 `workspace/` 的模型填好 `model_card_template.md`，做一次 AI Act 自評。
-- [ ] **定義下線/重訓條件**：在 Model Card 的「適用邊界」寫清楚：漂移到什麼程度就重訓或下線。
-- [ ] **🔓 解鎖 capstone**：到這裡你已用過每一個工具。打開 `capstone/smart-factory-mlops/`，
-      把 M1–M6 的零件**自己決定怎麼組**，完成端到端智慧工廠 pipeline（監控四層 + 治理閉環）。
+搜尋 `TODO(M6-`（對照 `sandbox/evidently/drift_report.py`）：
 
-> 此時的重點不再是「學工具」，而是「**設計與權衡**」——為什麼這樣組、漂移門檻怎麼定、哪些要人為複核。
+- [ ] **TODO(M6-1～3)**：reference vs current → `DataDriftPreset` → HTML 報告
+- [ ] **TODO(M6-4)**：漂移接進 M5 Prefect（重訓或告警）
+- [ ] **TODO(M6-5～7)**：填完 `model_card_template.md`（含下線/重訓條件 + AI Act 自評）
+- [ ] **🔓 解鎖 capstone**：打開 `capstone/smart-factory-mlops/`，自行組端到端 pipeline
 
+> 此時重點是「**設計與權衡**」——門檻怎麼定、哪些要人為複核。
 ---
 
 ## 4. 卡住怎麼辦

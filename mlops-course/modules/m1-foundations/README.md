@@ -48,24 +48,29 @@ python 01_baseline_iris.py      # 再「固定」結果：可重現的 baseline
 
 ## 3. 整合任務（Layer 2：到 `workspace/` 接上去）
 
-`workspace/` 是你**跨模組會一直長大**的主線專案。本模組的任務：把上面的 baseline 搬進 `workspace/`，當作整條 pipeline 的**主線起點**。之後每個模組的 B 段，都會在這份 baseline 上「接一個新工具」。
+`workspace/` 是你**跨模組會一直長大**的主線專案。本模組：把 sandbox 學到的 baseline **填進主線模板**，當作整條 pipeline 的起點。
 
-到 `workspace/` 建立你的第一版訓練腳本（TODO 提示）：
+在 `mlops-course/` 解鎖填空骨架（**不要從空白檔硬寫**）：
 
-```text
-workspace/
-└── train.py          # ← 你要建立的主線訓練腳本
+```bash
+make workspace-m1
+# 產生 workspace/train.py（已存在則跳過，不會蓋掉你的進度）
 ```
 
-`train.py` 需要做到（把沙盒學到的搬過來，並稍微「專案化」）：
+打開 `workspace/train.py`，搜尋 `TODO(M1-` 依序填（對照 `sandbox/01_baseline_iris.py`）：
 
-- [ ] **TODO**：讀 `datasets/iris.csv`（沿用沙盒的相對路徑寫法，別把資料複製進 workspace）。
-- [ ] **TODO**：`train_test_split` 設 `random_state=42`（seed 集中成一個常數，方便日後統一管理）。
-- [ ] **TODO**：訓 `LogisticRegression` 並印出 test accuracy（先求能跑、能重現，不求最佳）。
-- [ ] **TODO**：把這份 baseline 用 Git 版控起來（見下方 cheatsheet）——先開分支，再 commit。
-- [ ] **TODO（預留接口）**：在訓練結束處留一行註解 `# M2: 之後在這裡接 MLflow log_*`，標好下一個工具的接點。
+- [ ] **TODO(M1-1)**：設定 `SEED`
+- [ ] **TODO(M1-2)**：`find_iris_csv`（注意 `parents` 層數與 sandbox 不同）
+- [ ] **TODO(M1-3)**：`load_iris`
+- [ ] **TODO(M1-4～6)**：`train_test_split` → 訓練 → 印 test accuracy
+- [ ] **Git**：先開分支再 commit（見下方 cheatsheet）
+- [ ] 保留檔尾 `# M2: 之後在這裡接 MLflow log_*`（下一模組接點）
 
-> 為什麼搬進 workspace？沙盒是「練工具、可丟可重來」；workspace 是「你真正長大的成品」。兩者實體分開，避免把「練習」和「組系統」搞混。
+```bash
+python workspace/train.py   # 跑兩次，accuracy 必須一樣
+```
+
+> 為什麼搬進 workspace？沙盒是「練工具、可丟可重來」；workspace 是「你真正長大的成品」。模板只給骨架，關鍵邏輯仍要你自己填。
 
 ### 極簡 Git 工作流 cheatsheet
 

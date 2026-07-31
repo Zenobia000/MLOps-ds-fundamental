@@ -75,25 +75,19 @@ repo 根目錄的 `.github/workflows/`，GitHub 才會執行（README 有指令�
 
 ## 3. 整合任務（Layer 2：到 workspace 把這個工具接上去）
 
-回到 `workspace/`，把 M3/M4 累積的步驟編成 pipeline，並加上 CI gate：
+先解鎖填空模板：
 
 ```bash
-cd ../../workspace      # 你的專案主線（跨模組長大）
+make workspace-m5
+# 新增 flow.py、tests/test_pipeline.py
 ```
 
-TODO 提示：
+搜尋 `TODO(M5-`（對照 `sandbox/prefect/flow.py`）：
 
-- [ ] **用 Prefect 編排訓練流程**：把 workspace 既有的「載入特徵 -> 訓練 -> 評估」
-      三支函式各加 `@task`，再用一個 `@flow` 串起來（模式照搬 `sandbox/prefect/flow.py`）。
-- [ ] **加資料驗證 task**：在訓練前插一個 task，檢查輸入特徵的 schema 與值域，
-      不通過就讓 flow 失敗（對應「資料驗證」測試）。
-- [ ] **加品質門檻 gate**：評估後若 `accuracy < 門檻`，讓 flow 報錯而非繼續，
-      確保爛模型不會被往下游送（對應「品質門檻 gate」）。
-- [ ] **把 workspace 的測試接上 CI**：複製 `sandbox/github-actions/ci.yml` 到
-      repo 根目錄 `.github/workflows/`，把測試路徑改成 workspace 的 `tests/`，
-      push 後在 GitHub Actions 分頁確認變綠。
-- [ ] **（觀念題，不必實作）** 想一下：若要把新模型安全換上線，你會選 canary 還是
-      blue-green？把理由寫進 workspace 的 README。
+- [ ] **TODO(M5-1～6)**：`@task` 載入 / 驗證 / 訓練 / `quality_gate`，再用 `@flow` 串起來
+- [ ] **TODO(M5-7～8)**：補 `tests/`，複製 `sandbox/github-actions/ci.yml` 到
+      repo 根 `.github/workflows/`，pytest 路徑指到 `workspace/tests/`
+- [ ] **（觀念題）** canary vs blue-green：理由寫進 workspace README
 
 ## 4. 卡住怎麼辦
 

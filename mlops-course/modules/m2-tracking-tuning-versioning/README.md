@@ -81,18 +81,26 @@ cd ../dvc
 
 ## 3. 整合任務（Layer 2：到 `workspace/` 把工具接上去）
 
-把這三個工具接到你在 M1 建好的 baseline 上。到 `mlops-course/workspace/` 裡：
+先解鎖填空模板（需已有 `workspace/train.py`）：
 
-- [ ] **TODO（MLflow）**：把 M1 的訓練腳本包進 `with mlflow.start_run():`，
-      `log_param` 記超參、`log_metric` 記 accuracy/f1、`log_model` 存模型 + signature。
-- [ ] **TODO（Optuna）**：把固定超參改成 `objective(trial)`，用 `study.optimize` 自動找；
-      **每個 trial 用 nested run 寫進 MLflow**，最後把 `best_params` 記在 parent run。
-- [ ] **TODO（DVC）**：對 `workspace/` 用到的訓練資料 `dvc init / add / push`，
-      把 `.dvc` 指標檔 commit 進 Git，讓「程式碼版本」對應「資料版本」。
+```bash
+make workspace-m2
+# 新增 train_tracking.py、conf/params.yaml（已存在則 skip）
+```
 
-> 驗收：在 `mlflow ui` 看得到你 workspace 的實驗；`git log` 的每個 commit 都能用
-> `dvc checkout` 還原出當時的資料。
+打開 `workspace/train_tracking.py`，搜尋 `TODO(M2-`（對照本模組 sandbox）：
 
+- [ ] **TODO(M2-1)**：`start_run` + `log_param` / `log_metric` / `log_model` + signature
+- [ ] **TODO(M2-2～3)**：Optuna `objective` + nested run；`best_params` 寫進 parent run
+- [ ] **TODO（DVC，CLI）**：對訓練資料 `dvc init / add`，把 `.dvc` commit 進 Git
+- [ ] **選填**：讓訓練改讀 `conf/params.yaml`
+
+```bash
+python workspace/train_tracking.py
+make mlflow-ui
+```
+
+> 驗收：MLflow UI 看得到 experiment；`git log` 的 commit 能對應 DVC 資料版本。
 ---
 
 ## 4. 卡住怎麼辦

@@ -53,18 +53,20 @@
 
 ## 3. 整合任務(Layer 2:接到 `workspace/`)
 
-回到 `../../workspace/`,把你前面模組(M2 訓練 / M3 特徵)產出的模型包成可呼叫 API。
+先解鎖填空模板:
 
-**TODO 提示:**
+```bash
+make workspace-m4
+# 新增 services/app.py、Dockerfile、requirements.txt
+```
 
-- [ ] 在 `workspace/services/` 新增一個 FastAPI 或 BentoML 服務,**載入 M2 訓好的模型**(從 pickle 或 MLflow Registry),不要在服務內重訓。
-- [ ] 定義輸入 schema:欄位對齊 M3 Feast 的 feature view,在邊界驗證。
-- [ ] 加 `/health` 端點與容器 `HEALTHCHECK`,為 M5 自動化部署鋪路。
-- [ ] 寫一個 `Dockerfile`(參考 `sandbox/02_docker/`),把服務容器化並 `-p` 對外。
-- [ ] (進階)若 workspace 有影像子場景,走 04 的 ONNX 流程並在服務啟動時 warmup。
+搜尋 `TODO(M4-`（對照 `sandbox/01_fastapi` / `02_docker`）:
 
-> 正解對照:`../../checkpoints/after-m4/`。
+- [ ] **TODO(M4-1～5)**:啟動時**載入**已訓模型（勿在請求內重訓）、Pydantic schema、`/health`、`/predict`
+- [ ] **TODO(M4-6～7)**:Dockerfile + `HEALTHCHECK`，`docker run -p 8000:8000`
+- [ ] (進階)影像子場景走 04 ONNX + warmup
 
+> 正解對照:`checkpoints/after-m4/`。
 ---
 
 ## 4. 卡住怎麼辦

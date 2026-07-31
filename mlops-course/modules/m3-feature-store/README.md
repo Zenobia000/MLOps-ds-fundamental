@@ -87,18 +87,22 @@ jupyter lab 02_leakage_viz.ipynb
 
 ## 3. 整合任務(Layer 2:把 Feast 接到 workspace/)
 
-到 `workspace/`,把「特徵」這一層接進你正在長大的專案主線。目標:讓訓練腳本不再直接讀 CSV,而是**透過 Feast 取特徵**。
+先解鎖填空模板:
 
-TODO 提示:
+```bash
+make workspace-m3
+# 新增 prepare_features.py、feature_repo/（已存在則 skip）
+```
 
-- [ ] **TODO 1**:在 `workspace/` 建一個 `feature_repo/`,把本沙盒的 `feature_store.yaml` 與 `feature_definition.py` 搬過去(路徑改成 workspace 的相對路徑)。
-- [ ] **TODO 2**:寫一支 `prepare_features.py`,用 m1/m2 已經在用的玩具資料產出帶 `event_timestamp` 的 parquet(沿用 `00_prepare_data.py` 的補時間戳手法)。
-- [ ] **TODO 3**:把 workspace 既有的「讀 CSV → 訓練」流程,改成 `store.get_historical_features(...)` 取訓練集;確認欄位與原本一致。
-- [ ] **TODO 4**:在訓練完後呼叫 `store.materialize(...)`,並寫一支極簡推論函式用 `store.get_online_features(...)` 取線上特徵。
-- [ ] **TODO 5**(進階):把 m2 的 MLflow run 串起來 —— 記錄「這次訓練用的 feature view 名稱與版本」,讓實驗可追溯到特徵定義。
+搜尋 `TODO(M3-` 依序填(對照本模組 sandbox):
 
-驗收標準:訓練與推論讀的是**同一組 feature view**,且訓練集是 point-in-time join 出來的(沒有時間穿越)。
+- [ ] **TODO(M3-1～3)**:`prepare_features.py` 產出帶 `event_timestamp` 的 parquet
+- [ ] **TODO(M3-4～7)**:`feature_store.yaml` / `feature_definition.py` 填完後 `feast apply`
+- [ ] **接訓練**:把「讀 CSV → 訓練」改成 `store.get_historical_features(...)`
+- [ ] **線上**:`store.materialize(...)` + `get_online_features(...)`
+- [ ] **進階**:MLflow 記錄本次使用的 feature view 名稱
 
+驗收標準:訓練與推論讀**同一組 feature view**,訓練集是 point-in-time join(沒有時間穿越)。
 ---
 
 ## 4. 卡住怎麼辦

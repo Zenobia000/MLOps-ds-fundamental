@@ -1,0 +1,11 @@
+# M2 參數抽出（選填）：之後可改成由 train_tracking.py 讀這個檔
+# TODO(M2-conf): 訓練腳本改讀此檔的 seed / C / test_size，不要寫死在程式裡
+
+seed: 42
+model:
+  name: LogisticRegression
+  C: 1.0
+  max_iter: 1000
+data:
+  path: datasets/iris.csv
+  test_size: 0.2
