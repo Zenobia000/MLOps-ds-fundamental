@@ -48,6 +48,12 @@ cd ..
 python 01_point_in_time_demo.py
 ```
 
+最後,用 notebook **親眼看見**上面第 1 節那張「錯誤做法 → 指標虛高」的表格:
+
+```bash
+jupyter lab 02_leakage_viz.ipynb
+```
+
 各檔在教什麼:
 
 | 檔案 | 學到的最小動詞/概念 |
@@ -56,8 +62,26 @@ python 01_point_in_time_demo.py
 | `sandbox/feature_repo/feature_store.yaml` | `local` provider + `sqlite` 線上 store 的最小設定 |
 | `sandbox/feature_repo/feature_definition.py` | **Entity / FileSource / FeatureView** 三個核心物件 |
 | `sandbox/01_point_in_time_demo.py` | `get_historical_features` / `materialize` / `get_online_features` |
+| `sandbox/02_leakage_viz.ipynb` | **看見**時間穿越：時間軸圖 + 洩漏/正確兩版模型的 ROC 對照 |
 
 > 提醒:`sandbox/` 的每個檔都能獨立理解,彼此不互相 import。
+
+### 2-1　為什麼洩漏對照是 notebook,其餘是腳本?
+
+第 1 節那張表用文字告訴你「離線指標會虛高」,但**數字沒有並排出現,你不會真的有感**。
+`02_leakage_viz.ipynb` 把它變成可以看的東西:
+
+- **時間軸圖**:標出查詢時刻 T,綠點是你上線時真的有的讀值,紅叉是偷看的那一筆。
+- **兩條 ROC 曲線疊圖**:洩漏版 AUC **0.940** vs 正確版 **0.791**——**虛高 +0.149（19%）**。
+- **關鍵領悟**:正確版不是 0.5(亂猜),它仍有 0.79,來自機台的長期水準差異(真訊號)。
+  所以**「離線指標變差」不是退步,是終於誠實**。
+
+它用的是 `datasets/toy_sensors.csv`(5 台機器 × 150 小時)而不是本沙盒的 diabetes 資料——
+因為 diabetes **每位病患只有一列**,沒有時間維度可以穿越,做不出對照。
+
+其餘檔案維持腳本,原因很具體:`feature_definition.py` **必須是 Feast 能 import 的模組**,
+`00_prepare_data.py` 產出的 parquet 是要餵給 `feast apply` 的**檔案交付物**,
+兩者都不能是 notebook。判準見 [`docs/notebook-vs-script.md`](../../../docs/notebook-vs-script.md)。
 
 ---
 

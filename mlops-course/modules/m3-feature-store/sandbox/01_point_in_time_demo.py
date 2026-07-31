@@ -26,6 +26,7 @@
 """
 
 import os
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -39,10 +40,27 @@ SEED = 42
 HERE = Path(__file__).resolve().parent
 REPO_PATH = HERE / "feature_repo"
 
-# ★ 關鍵:Feast 解析 FileSource 的相對路徑(data/xxx.parquet)是相對「當前工作目錄」,
-#   不是 repo_path。所以我們先把工作目錄切進 feature_repo,確保不論從哪裡執行本檔
-#   都能正確找到 data/ 下的 parquet。(等同手動 cd feature_repo 再跑)
-os.chdir(REPO_PATH)
+
+@contextmanager
+def inside_feature_repo():
+    """把工作目錄「暫時」切進 feature_repo,離開時還原。
+
+    ★ 為什麼需要切:Feast 解析 FileSource 的相對路徑(data/xxx.parquet)是相對
+      「當前工作目錄」,不是 repo_path。不切的話,從別的位置執行就找不到 parquet。
+      (等同手動 cd feature_repo 再跑)
+
+    ★ 為什麼是 context manager 而不是在檔頭直接 os.chdir:
+      import 時就 chdir 是「行程層級」的副作用——任何 import 或收集本檔的東西
+      (pytest、其他腳本)都會被連帶改掉工作目錄,且第二次執行會從已經切過的
+      目錄再往下切。用 with 包住,保證離開即還原,重跑幾次結果都一樣。
+      這正是本課一再強調的「可重現」:副作用要有明確的邊界。
+    """
+    previous = Path.cwd()
+    os.chdir(REPO_PATH)
+    try:
+        yield REPO_PATH
+    finally:
+        os.chdir(previous)
 
 
 def build_training_set(store: FeatureStore) -> pd.DataFrame:
@@ -54,7 +72,8 @@ def build_training_set(store: FeatureStore) -> pd.DataFrame:
     #   所以這裡直接讀 target_df.parquet 的 event_timestamp 當查詢時刻 —— 也就是
     #   「在每位病患被確診的那一刻,我當時手上有的特徵長什麼樣?」
     #   這樣每個查詢時刻都緊貼該病患的特徵時間,落在 ttl(2 天)內,join 得到資料。
-    target_df = pd.read_parquet("data/target_df.parquet")  # 已 cd 進 feature_repo
+    # 用絕對路徑讀,不依賴當前工作目錄——即使呼叫端忘了包 inside_feature_repo 也讀得到。
+    target_df = pd.read_parquet(REPO_PATH / "data" / "target_df.parquet")
     entity_df = target_df.loc[
         target_df["patient_id"].isin([0, 1, 2, 3, 4]),
         ["patient_id", "event_timestamp"],
@@ -79,41 +98,44 @@ def main() -> None:
     # 這裡載入那份 registry,拿到可操作的 store 物件。
     store = FeatureStore(repo_path=str(REPO_PATH))
 
-    print("=" * 64)
-    print("步驟 1) get_historical_features:point-in-time join 組訓練集")
-    print("=" * 64)
-    training_df = build_training_set(store)
-    # 注意:每位病患的 Glucose/BMI/Age 都是「在該病患標籤觀測時刻或之前」最新的一筆,
-    #       絕不會混進那個時刻「之後」才量到的數值 → 沒有時間穿越。
-    print(training_df.to_string(index=False))
+    # 三個 Feast 動詞都需要工作目錄在 feature_repo(見 inside_feature_repo 說明),
+    # 用一個 with 把它們包起來:進去切、出來還原,副作用有明確邊界。
+    with inside_feature_repo():
+        print("=" * 64)
+        print("步驟 1) get_historical_features:point-in-time join 組訓練集")
+        print("=" * 64)
+        training_df = build_training_set(store)
+        # 注意:每位病患的 Glucose/BMI/Age 都是「在該病患標籤觀測時刻或之前」最新的一筆,
+        #       絕不會混進那個時刻「之後」才量到的數值 → 沒有時間穿越。
+        print(training_df.to_string(index=False))
 
-    print("\n" + "=" * 64)
-    print("步驟 2) materialize:把最新特徵搬進線上 store(sqlite)")
-    print("=" * 64)
-    # materialize 會把 [start, end] 區間內、每個 entity 的「最新」特徵
-    # 寫進 online_store.db,讓線上推論能 O(1) 秒查。
-    # 用帶 UTC 時區的時間,與 parquet 的 event_timestamp 保持一致(都是 UTC)。
-    store.materialize(
-        start_date=datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
-        end_date=datetime(2024, 2, 1, 0, 0, 0, tzinfo=timezone.utc),
-    )
-    print("materialize 完成:online_store.db 已更新。")
+        print("\n" + "=" * 64)
+        print("步驟 2) materialize:把最新特徵搬進線上 store(sqlite)")
+        print("=" * 64)
+        # materialize 會把 [start, end] 區間內、每個 entity 的「最新」特徵
+        # 寫進 online_store.db,讓線上推論能 O(1) 秒查。
+        # 用帶 UTC 時區的時間,與 parquet 的 event_timestamp 保持一致(都是 UTC)。
+        store.materialize(
+            start_date=datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+            end_date=datetime(2024, 2, 1, 0, 0, 0, tzinfo=timezone.utc),
+        )
+        print("materialize 完成:online_store.db 已更新。")
 
-    print("\n" + "=" * 64)
-    print("步驟 3) get_online_features:用 patient_id 秒查,模擬即時推論")
-    print("=" * 64)
-    # 線上查詢「不帶時間戳」:它永遠回傳 materialize 進去的「最新」特徵。
-    # ★ 一致性保證:這裡的特徵欄位與步驟 1 訓練時完全相同
-    #   (同一個 feature view、同一份定義),所以「訓練/服務一致」。
-    online_features = store.get_online_features(
-        features=[
-            "predictors_feature_view:Glucose",
-            "predictors_feature_view:BMI",
-            "predictors_feature_view:Age",
-        ],
-        entity_rows=[{"patient_id": 0}, {"patient_id": 1}, {"patient_id": 2}],
-    ).to_dict()
-    print(pd.DataFrame(online_features).to_string(index=False))
+        print("\n" + "=" * 64)
+        print("步驟 3) get_online_features:用 patient_id 秒查,模擬即時推論")
+        print("=" * 64)
+        # 線上查詢「不帶時間戳」:它永遠回傳 materialize 進去的「最新」特徵。
+        # ★ 一致性保證:這裡的特徵欄位與步驟 1 訓練時完全相同
+        #   (同一個 feature view、同一份定義),所以「訓練/服務一致」。
+        online_features = store.get_online_features(
+            features=[
+                "predictors_feature_view:Glucose",
+                "predictors_feature_view:BMI",
+                "predictors_feature_view:Age",
+            ],
+            entity_rows=[{"patient_id": 0}, {"patient_id": 1}, {"patient_id": 2}],
+        ).to_dict()
+        print(pd.DataFrame(online_features).to_string(index=False))
 
     print("\n完成。對照一下:")
     print("  - 步驟 1 是『離線、回溯歷史時刻』取特徵 → 給訓練用")

@@ -37,6 +37,25 @@
 
 > 技能階梯的完整定義見 `docs/`（`teaching-progression.md`）。每一階只加**一個**新工具，且假設前面都已熟悉。每個工具初次接觸**只教 3–5 個核心動詞**，進階功能全部延後——「現在不用學完，之後需要時會回來」。
 
+### 沙盒裡的兩種介質：notebook 與腳本
+
+沙盒不是清一色的 `.py`。有 4 個單元刻意做成 notebook，判準只有一句話：
+
+> **人在看資料 → notebook；機器無人值守在跑 → 檔案。**
+
+| Notebook | 在哪 | 為什麼是 notebook |
+| :--- | :--- | :--- |
+| `00_eda_iris.ipynb` | m1 | 分布、平衡、可分性——理解來自看見 |
+| `04_visualization.ipynb` | m2 | Optuna 的互動圖是用來**決定下一輪搜尋範圍**的 |
+| `02_leakage_viz.ipynb` | m3 | 時間穿越是對照式教材：洩漏 AUC 0.940 vs 正確 0.791 |
+| `drift_explore.ipynb` | m6 | 漂移分析本質就是資料分析 |
+
+其餘 29 個單元維持腳本／指令。**m4 是分水嶺**——它的主題正是「把模型**從 notebook 變成**服務」，
+所以那之後不用 notebook 不是限制，是課程訊息本身。**m6 會盪回來**，是唯一兩種介質並存的模組。
+
+逐一裁決與工程前提見 [`docs/notebook-vs-script.md`](../docs/notebook-vs-script.md)。
+notebook 的品質由 CI 保證：`make nb-test` 實際執行每一本，`make nb-verify` 擋下帶輸出的檔案。
+
 ---
 
 ## 3. 如何「漸進解鎖」（不要一開始就看到全部）
@@ -71,6 +90,7 @@ mlops-course/
 │   ├── m5-automation/                     # Prefect + GitHub Actions
 │   └── m6-monitoring-governance/          # Evidently + 治理 + 收尾
 │       每個 mN-*/ 內部一致：README.md（五段格式）+ sandbox/（最小可跑範例）
+│       sandbox/ 內多為 .py 腳本；m1/m2/m3/m6 各有一本 .ipynb（見上方「兩種介質」）
 │
 ├── workspace/         # ★ Layer 2：你的漸進整合主線（跨模組累積長大，只有一份）
 │

@@ -43,7 +43,26 @@ python 02_mlflow_callback.py  # ★核心：每個 trial 寫成一個 MLflow run
 python 03_pruning_asha.py     # 加 pruner 提早砍掉爛 trial；註解附「多目標」與 ASHA 選配
 
 mlflow ui                     # 進實驗 iris-optuna-hpo，展開 parent run 看 20 個 child run
+
+jupyter lab 04_visualization.ipynb   # 讀懂搜尋過程：收斂/重要性/平行座標/slice
 ```
+
+`04_visualization.ipynb` 是本模組唯一的 notebook，因為 `optuna.visualization` 產出的是
+**互動式 Plotly 圖**，而且這四張圖的用途不是好看，是**決定下一輪要怎麼調搜尋範圍**：
+
+| 圖 | 它回答的問題 | 你該做的事 |
+| :--- | :--- | :--- |
+| optimization history | 還有沒有進步空間？ | 紅線走平就停，別再燒預算 |
+| param importances | 誰在決定分數？ | 不重要的超參固定住 |
+| parallel coordinate | 好 trial 長什麼樣？ | 把範圍縮到深色線集中的區間 |
+| slice plot | 範圍設得對嗎？ | 最佳點貼邊界 → 往外擴 |
+
+> **為什麼 MLflow 那三支刻意不做成 notebook？**
+> 兩個理由。技術上，MLflow 的 run lifecycle 在 notebook 是經典陷阱——cell 中途報錯會留下
+> 未關閉的 run，下一次 `start_run()` 就錯誤地巢狀進去，教學現場很難除錯。
+> 更重要的是教學一致性：**本模組的主題是「可重現」，而亂序執行正是 notebook 最有名的失敗模式**。
+> 用一個會給出不同答案的介質去教「每次都要一樣」，訊息會自我矛盾。
+> 完整判準見 [`docs/notebook-vs-script.md`](../../../docs/notebook-vs-script.md)。
 
 ### 2-3　DVC（階 3）— 最小可用動詞：`init / add / push / checkout`
 

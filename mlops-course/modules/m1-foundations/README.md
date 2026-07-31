@@ -13,8 +13,26 @@
 
 ```bash
 cd modules/m1-foundations/sandbox
-python 01_baseline_iris.py
+
+jupyter lab 00_eda_iris.ipynb   # 先「看」資料：分布、類別平衡、可分性
+python 01_baseline_iris.py      # 再「固定」結果：可重現的 baseline
 ```
+
+### 2-0　為什麼這裡有一本 notebook、旁邊卻是腳本？
+
+這是本課程第一次示範**介質選擇**，值得停下來想三十秒：
+
+| | `00_eda_iris.ipynb` | `01_baseline_iris.py` |
+| :--- | :--- | :--- |
+| 誰在用 | **人**，互動式 | **機器**，無人值守 |
+| 目的 | 看懂資料長什麼樣 | 產出今天/明天/別人跑都一樣的數字 |
+| 為什麼是這個介質 | 理解來自**看見**——分布、重疊、相關性都是圖 | 主題是**可重現**，而亂序執行正是 notebook 最弱的地方 |
+
+> 判準一句話：**人在看資料 → notebook；機器無人值守在跑 → 檔案。**
+> 全課 33 個沙盒單元的逐一裁決見 [`docs/notebook-vs-script.md`](../../../docs/notebook-vs-script.md)。
+
+`00_eda_iris.ipynb` 會帶你看四件事，每一件都直接影響下一步的決策：
+類別平衡（決定 accuracy 能不能用）、特徵分布、花瓣散布圖（決定 baseline 選線性模型就夠）、相關性（花瓣長寬相關 0.96，特徵有冗餘）。
 
 `01_baseline_iris.py` 做的事（也只做這些）：
 
