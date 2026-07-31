@@ -11,7 +11,9 @@
 
 怎麼跑：
     python 03_log_model.py
-    mlflow ui          # 點進 run，左側 Artifacts 會看到 model/ 與它的 signature
+    MLFLOW_ALLOW_FILE_STORE=true uv run mlflow ui --backend-store-uri ./mlruns --port 5000
+    # 點進 run，左側 Artifacts 會看到 model/ 與它的 signature
+    # （新版 MLflow 預設擋掉純檔案 backend，一定要加這個環境變數，否則會報錯）
 """
 
 import os
@@ -73,6 +75,8 @@ def main() -> None:
     loaded = mlflow.sklearn.load_model(model_info.model_uri)
     reloaded_acc = accuracy_score(y_test, loaded.predict(X_test))
     print(f"讀回模型後重新預測 accuracy={reloaded_acc:.4f}（應與上面相同）")
+    print("開 UI 看 artifacts：MLFLOW_ALLOW_FILE_STORE=true uv run mlflow ui "
+          "--backend-store-uri ./mlruns --port 5000 -> http://127.0.0.1:5000")
 
 
 if __name__ == "__main__":
