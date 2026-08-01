@@ -26,6 +26,8 @@
 
 ## 2. 六模組總表（學什麼工具 + 對應技能階梯第幾階）
 
+如果你還不熟各工具的應用面，先讀 [`modules/component-introduction.md`](./modules/component-introduction.md)，再回來照模組順序動手。
+
 | 模組 | 主題 | A 段：單工具沙盒（玩具資料） | 對應技能階梯 |
 | :--- | :--- | :--- | :--- |
 | **m1** | 全景 / 基礎 | Git + 純 sklearn baseline（無新工具） | 階 0（純 Python + Git） |

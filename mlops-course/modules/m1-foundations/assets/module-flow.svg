@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="810" viewBox="0 0 1440 810">
+  <defs>
+    <style>
+      .bg{fill:#fafafa}
+      .title{font:700 42px "Noto Sans CJK TC","Arial",sans-serif;fill:#202124}
+      .section{font:700 24px "Noto Sans CJK TC","Arial",sans-serif;fill:#1a73e8}
+      .card-title{font:700 22px "Noto Sans CJK TC","Arial",sans-serif;fill:#202124}
+      .text{font:400 18px "Noto Sans CJK TC","Arial",sans-serif;fill:#3c4043}
+      .small{font:400 15px "Noto Sans CJK TC","Arial",sans-serif;fill:#5f6368}
+      .blue{stroke:#4285f4;fill:#fff}
+      .red{stroke:#ea4335;fill:#fff}
+      .yellow{stroke:#fbbc05;fill:#fff}
+      .green{stroke:#34a853;fill:#fff}
+      .line{stroke:#5f6368;stroke-width:2;fill:none}
+      .bline{stroke:#4285f4;stroke-width:3;fill:none}
+      .rline{stroke:#ea4335;stroke-width:3;fill:none}
+      .gline{stroke:#34a853;stroke-width:3;fill:none}
+    </style>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#5f6368"/>
+    </marker>
+    <marker id="blueArrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#4285f4"/>
+    </marker>
+    <marker id="greenArrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#34a853"/>
+    </marker>
+  </defs>
+  <rect class="bg" width="1440" height="810"/>
+  <text x="720" y="68" text-anchor="middle" class="title">M1 Foundations：可重現 Baseline 工作流</text>
+
+  <text x="120" y="132" class="section">1. 先理解資料</text>
+  <line x1="120" y1="154" x2="430" y2="154" class="line"/>
+  <rect x="80" y="190" width="330" height="170" rx="14" class="blue" stroke-width="3"/>
+  <text x="115" y="230" class="card-title">Notebook: EDA</text>
+  <text x="115" y="268" class="text">看分布、類別平衡、可分性</text>
+  <text x="115" y="302" class="text">回答：資料有沒有基本訊號？</text>
+  <text x="115" y="336" class="small">人在看資料 → notebook</text>
+
+  <text x="555" y="132" class="section">2. 再固定流程</text>
+  <line x1="555" y1="154" x2="875" y2="154" class="line"/>
+  <rect x="520" y="190" width="360" height="220" rx="14" class="yellow" stroke-width="3"/>
+  <text x="555" y="230" class="card-title">Python Script</text>
+  <text x="555" y="268" class="text">load data → train_test_split</text>
+  <text x="555" y="302" class="text">LogisticRegression → accuracy</text>
+  <text x="555" y="336" class="text">SEED / random_state = 42</text>
+  <text x="555" y="370" class="small">機器重跑流程 → .py</text>
+
+  <text x="1005" y="132" class="section">3. 最後版控</text>
+  <line x1="1005" y1="154" x2="1320" y2="154" class="line"/>
+  <rect x="1010" y="190" width="330" height="170" rx="14" class="green" stroke-width="3"/>
+  <text x="1045" y="230" class="card-title">Git Baseline Commit</text>
+  <text x="1045" y="268" class="text">branch → status → add → commit</text>
+  <text x="1045" y="302" class="text">保存可回溯起點</text>
+  <text x="1045" y="336" class="small">後續 MLflow / DVC 的乾淨基準</text>
+
+  <path d="M410 275 C455 275 470 300 515 300" class="bline" marker-end="url(#blueArrow)"/>
+  <path d="M880 300 C930 300 955 275 1005 275" class="gline" marker-end="url(#greenArrow)"/>
+
+  <rect x="250" y="500" width="940" height="150" rx="18" fill="#fff" stroke="#dadce0" stroke-width="2"/>
+  <text x="720" y="540" text-anchor="middle" class="card-title">工程驗收</text>
+  <text x="315" y="585" class="text">同一支 script 重跑兩次，metric 必須一致</text>
+  <text x="315" y="620" class="text">Git commit 只包含 baseline 相關變更</text>
+  <text x="770" y="585" class="text">Notebook 用於理解，不作為唯一訓練入口</text>
+  <text x="770" y="620" class="text">下一步：把實驗紀錄接到 MLflow</text>
+</svg>

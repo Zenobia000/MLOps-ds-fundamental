@@ -41,7 +41,9 @@ def objective(trial: optuna.Trial) -> float:
     # 動詞：suggest_* —— 宣告搜尋空間，Optuna 會在範圍內幫你挑值
     C = trial.suggest_float("C", 1e-3, 1e2, log=True)       # 對數尺度掃正則化強度
     max_iter = trial.suggest_int("max_iter", 100, 500, step=100)
-    solver = trial.suggest_categorical("solver", ["lbfgs", "liblinear"])
+    # 只放支援「多分類」的 solver：iris 是 3 類，liblinear 只做二元分類會直接報錯。
+    # 搜尋空間放進不合法的值，錯誤會等到某個 trial 剛好抽中它才爆——這種雷要在定義時就排除。
+    solver = trial.suggest_categorical("solver", ["lbfgs", "newton-cg"])
 
     model = LogisticRegression(C=C, max_iter=max_iter, solver=solver, random_state=SEED)
 

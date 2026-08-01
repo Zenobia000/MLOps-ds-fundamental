@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-124 26 1344 439" width="1344" height="439" role="img" aria-label="One script forks into two runs that land on two different score levels, with the gap between them marked">
+  <rect x="-124" y="26" width="1344" height="439" fill="#F0EEE6"/>
+
+  <!-- the script: one block, three code bars inside -->
+  <rect x="300" y="205" width="130" height="90" fill="none" stroke="#141413" stroke-width="1.5"/>
+  <g fill="#D0CCBF">
+    <rect x="318" y="228" width="80" height="8"/>
+    <rect x="318" y="246" width="60" height="8"/>
+    <rect x="318" y="264" width="94" height="8"/>
+  </g>
+
+  <!-- fork node: the same entry point for both runs -->
+  <rect x="464" y="239" width="12" height="12" fill="#141413"/>
+
+  <!-- run A: diverges upward, ends on the higher level -->
+  <path d="M 476 245 C 572 245, 604 150, 700 150"
+        stroke="#141413" stroke-width="3" fill="none"/>
+
+  <!-- run B: diverges downward, ends on the lower level -->
+  <path d="M 476 245 C 572 245, 604 340, 700 340"
+        stroke="#D97757" stroke-width="3" fill="none"/>
+
+  <!-- the two result levels -->
+  <path d="M 700 150 L 1120 150" stroke="#141413" stroke-width="5" fill="none"/>
+  <path d="M 700 340 L 1120 340" stroke="#D97757" stroke-width="5" fill="none"/>
+
+  <!-- endpoint anchors -->
+  <rect x="1108" y="138" width="12" height="12" fill="#141413"/>
+  <rect x="1108" y="328" width="12" height="12" fill="#D97757"/>
+
+  <!-- vertical scale on the right -->
+  <path d="M 1120 90 L 1120 400" stroke="#141413" stroke-width="1.5" fill="none" opacity="0.55"/>
+  <g stroke="#141413" stroke-width="1.5" opacity="0.3">
+    <path d="M 1120 110 l 8 0"/>
+    <path d="M 1120 225 l 8 0"/>
+    <path d="M 1120 395 l 8 0"/>
+  </g>
+  <g stroke="#141413" stroke-width="1.5" opacity="0.55">
+    <path d="M 1120 150 l 12 0"/>
+    <path d="M 1120 340 l 12 0"/>
+  </g>
+
+  <!-- the gap: bracket spanning the two levels -->
+  <g stroke="#D97757" stroke-width="2" fill="none">
+    <path d="M 1170 150 L 1170 340"/>
+    <path d="M 1162 150 L 1178 150"/>
+    <path d="M 1162 340 L 1178 340"/>
+  </g>
+</svg>

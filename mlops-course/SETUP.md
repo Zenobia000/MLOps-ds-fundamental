@@ -106,8 +106,8 @@ MLflow 預設把實驗追蹤寫進當前目錄的 `mlruns/`。在**你正在跑�
 # 方式一：用 Makefile（推薦）
 make mlflow-ui
 
-# 方式二：直接呼叫
-mlflow ui --backend-store-uri ./mlruns --port 5000
+# 方式二：直接呼叫（新版 MLflow 預設擋掉純檔案 backend，需加這個環境變數）
+MLFLOW_ALLOW_FILE_STORE=true mlflow ui --backend-store-uri ./mlruns --port 5000
 ```
 
 啟動後開瀏覽器到 **http://127.0.0.1:5000**，就能看到每次 run 的參數、指標、模型。

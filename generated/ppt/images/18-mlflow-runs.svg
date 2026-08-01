@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-69 8 1289 435" width="1289" height="435" role="img" aria-label="Abstract sortable experiment table: a header bar over seven rows of grey field bars, with a terracotta metric column decreasing in length from top to bottom">
+  <rect x="-69" y="8" width="1289" height="435" fill="#F0EEE6"/>
+
+  <!-- experiment name block, top left -->
+  <rect x="300" y="74" width="86" height="20" fill="#141413"/>
+
+  <!-- sort arrow above the metric column -->
+  <path d="M 1080 76 L 1106 76 L 1093 96 Z" fill="#D97757"/>
+
+  <!-- header bar -->
+  <rect x="300" y="112" width="880" height="16" fill="#141413"/>
+
+  <!-- row separators -->
+  <g stroke="#141413" stroke-width="1.5" opacity="0.12">
+    <path d="M 300 186 L 1180 186"/>
+    <path d="M 300 224 L 1180 224"/>
+    <path d="M 300 262 L 1180 262"/>
+    <path d="M 300 300 L 1180 300"/>
+    <path d="M 300 338 L 1180 338"/>
+    <path d="M 300 376 L 1180 376"/>
+    <path d="M 300 414 L 1180 414"/>
+  </g>
+
+  <!-- field values: grey bars of varying length -->
+  <g fill="#D0CCBF">
+    <rect x="300" y="156" width="96"  height="12"/><rect x="440" y="156" width="130" height="12"/><rect x="610" y="156" width="76" height="12"/><rect x="730" y="156" width="110" height="12"/>
+    <rect x="300" y="194" width="88"  height="12"/><rect x="440" y="194" width="118" height="12"/><rect x="610" y="194" width="88" height="12"/><rect x="730" y="194" width="96"  height="12"/>
+    <rect x="300" y="232" width="104" height="12"/><rect x="440" y="232" width="142" height="12"/><rect x="610" y="232" width="70" height="12"/><rect x="730" y="232" width="120" height="12"/>
+    <rect x="300" y="270" width="92"  height="12"/><rect x="440" y="270" width="124" height="12"/><rect x="610" y="270" width="82" height="12"/><rect x="730" y="270" width="104" height="12"/>
+    <rect x="300" y="308" width="84"  height="12"/><rect x="440" y="308" width="136" height="12"/><rect x="610" y="308" width="74" height="12"/><rect x="730" y="308" width="116" height="12"/>
+    <rect x="300" y="346" width="100" height="12"/><rect x="440" y="346" width="112" height="12"/><rect x="610" y="346" width="90" height="12"/><rect x="730" y="346" width="92"  height="12"/>
+    <rect x="300" y="384" width="90"  height="12"/><rect x="440" y="384" width="128" height="12"/><rect x="610" y="384" width="78" height="12"/><rect x="730" y="384" width="108" height="12"/>
+  </g>
+
+  <!-- metric column: sorted descending -->
+  <g fill="#D97757">
+    <rect x="1000" y="156" width="176" height="12"/>
+    <rect x="1000" y="194" width="162" height="12"/>
+    <rect x="1000" y="232" width="149" height="12"/>
+    <rect x="1000" y="270" width="135" height="12"/>
+    <rect x="1000" y="308" width="121" height="12"/>
+    <rect x="1000" y="346" width="106" height="12"/>
+    <rect x="1000" y="384" width="90"  height="12"/>
+  </g>
+
+  <!-- metric column rule, hairline -->
+  <path d="M 984 112 L 984 414" stroke="#141413" stroke-width="1.5" fill="none" opacity="0.28"/>
+</svg>

@@ -10,7 +10,8 @@
     python 01_first_run.py
 
 看結果（在本資料夾開 UI，瀏覽器進 http://127.0.0.1:5000）：
-    mlflow ui
+    MLFLOW_ALLOW_FILE_STORE=true uv run mlflow ui --backend-store-uri ./mlruns --port 5000
+    （新版 MLflow 預設擋掉純檔案 backend，一定要加這個環境變數，否則會報錯）
 """
 
 import os
@@ -65,7 +66,8 @@ def main() -> None:
         mlflow.log_metric("accuracy", acc)
 
         print(f"已記錄一個 run：C={C}, max_iter={max_iter}, accuracy={acc:.4f}")
-        print("執行 `mlflow ui` 後到 http://127.0.0.1:5000 看這個 run")
+        print("開 UI 看這個 run：MLFLOW_ALLOW_FILE_STORE=true uv run mlflow ui "
+              "--backend-store-uri ./mlruns --port 5000 -> http://127.0.0.1:5000")
 
 
 if __name__ == "__main__":

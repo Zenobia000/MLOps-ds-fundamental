@@ -10,7 +10,9 @@
 
 怎麼跑：
     python 02_params_metrics.py
-    mlflow ui          # 在本資料夾開 UI，到 experiment「iris-logreg-sweep」比較三個 run
+    MLFLOW_ALLOW_FILE_STORE=true uv run mlflow ui --backend-store-uri ./mlruns --port 5000
+    # 到 experiment「iris-logreg-sweep」比較三個 run
+    # （新版 MLflow 預設擋掉純檔案 backend，一定要加這個環境變數，否則會報錯）
 """
 
 import os
@@ -74,7 +76,9 @@ def main() -> None:
             print(f"  run C={params['C']:>4} -> "
                   f"acc={metrics['accuracy']:.4f}, f1={metrics['f1_macro']:.4f}")
 
-    print("三個 run 已寫入實驗 iris-logreg-sweep，用 `mlflow ui` 並排比較")
+    print("三個 run 已寫入實驗 iris-logreg-sweep")
+    print("開 UI 並排比較：MLFLOW_ALLOW_FILE_STORE=true uv run mlflow ui "
+          "--backend-store-uri ./mlruns --port 5000 -> http://127.0.0.1:5000")
 
 
 if __name__ == "__main__":

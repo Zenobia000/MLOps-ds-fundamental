@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="810" viewBox="0 0 1440 810">
+  <defs>
+    <style>
+      .bg{fill:#fafafa}.title{font:700 42px "Noto Sans CJK TC","Arial",sans-serif;fill:#202124}
+      .section{font:700 24px "Noto Sans CJK TC","Arial",sans-serif;fill:#1a73e8}
+      .card-title{font:700 22px "Noto Sans CJK TC","Arial",sans-serif;fill:#202124}
+      .text{font:400 18px "Noto Sans CJK TC","Arial",sans-serif;fill:#3c4043}
+      .small{font:400 15px "Noto Sans CJK TC","Arial",sans-serif;fill:#5f6368}
+      .blue{stroke:#4285f4;fill:#fff}.red{stroke:#ea4335;fill:#fff}.yellow{stroke:#fbbc05;fill:#fff}.green{stroke:#34a853;fill:#fff}
+      .line{stroke:#5f6368;stroke-width:2;fill:none}.bline{stroke:#4285f4;stroke-width:3;fill:none}.rline{stroke:#ea4335;stroke-width:3;fill:none}.gline{stroke:#34a853;stroke-width:3;fill:none}
+    </style>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#5f6368"/></marker>
+    <marker id="blueArrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#4285f4"/></marker>
+    <marker id="redArrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#ea4335"/></marker>
+    <marker id="greenArrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#34a853"/></marker>
+  </defs>
+  <rect class="bg" width="1440" height="810"/>
+  <text x="720" y="68" text-anchor="middle" class="title">M2 Tracking / Tuning / Versioning</text>
+
+  <rect x="70" y="170" width="285" height="170" rx="14" class="yellow" stroke-width="3"/>
+  <text x="105" y="210" class="card-title">Reproducible Script</text>
+  <text x="105" y="248" class="text">M1 baseline</text>
+  <text x="105" y="282" class="text">fixed seed</text>
+  <text x="105" y="316" class="small">穩定訓練入口</text>
+
+  <rect x="430" y="130" width="310" height="210" rx="14" class="blue" stroke-width="3"/>
+  <text x="465" y="170" class="card-title">MLflow</text>
+  <text x="465" y="208" class="text">log params</text>
+  <text x="465" y="242" class="text">log metrics</text>
+  <text x="465" y="276" class="text">log model artifacts</text>
+  <text x="465" y="310" class="small">每次訓練都可比較</text>
+
+  <rect x="430" y="430" width="310" height="210" rx="14" class="red" stroke-width="3"/>
+  <text x="465" y="470" class="card-title">Optuna</text>
+  <text x="465" y="508" class="text">study.optimize</text>
+  <text x="465" y="542" class="text">trial.suggest_*</text>
+  <text x="465" y="576" class="text">best_params</text>
+  <text x="465" y="610" class="small">自動搜尋超參數</text>
+
+  <rect x="815" y="130" width="280" height="210" rx="14" class="blue" stroke-width="3"/>
+  <text x="850" y="170" class="card-title">Nested Runs</text>
+  <text x="850" y="208" class="text">1 Optuna trial</text>
+  <text x="850" y="242" class="text">= 1 MLflow run</text>
+  <text x="850" y="276" class="text">UI 比較搜尋過程</text>
+  <text x="850" y="310" class="small">HPO 可追蹤</text>
+
+  <rect x="815" y="430" width="280" height="210" rx="14" class="green" stroke-width="3"/>
+  <text x="850" y="470" class="card-title">DVC</text>
+  <text x="850" y="508" class="text">dvc add data.csv</text>
+  <text x="850" y="542" class="text">Git commit .dvc pointer</text>
+  <text x="850" y="576" class="text">dvc checkout</text>
+  <text x="850" y="610" class="small">程式碼對應資料版本</text>
+
+  <rect x="1170" y="265" width="210" height="210" rx="14" fill="#fff" stroke="#dadce0" stroke-width="2"/>
+  <text x="1275" y="305" text-anchor="middle" class="card-title">工程結果</text>
+  <text x="1205" y="348" class="text">可追蹤</text>
+  <text x="1205" y="382" class="text">可比較</text>
+  <text x="1205" y="416" class="text">可回溯資料</text>
+
+  <path d="M355 240 C385 240 395 235 425 235" class="bline" marker-end="url(#blueArrow)"/>
+  <path d="M585 340 L585 425" class="rline" marker-end="url(#redArrow)"/>
+  <path d="M740 235 L810 235" class="bline" marker-end="url(#blueArrow)"/>
+  <path d="M740 535 L810 535" class="gline" marker-end="url(#greenArrow)"/>
+  <path d="M1095 235 C1135 235 1140 340 1165 350" class="line" marker-end="url(#arrow)"/>
+  <path d="M1095 535 C1135 535 1140 425 1165 410" class="line" marker-end="url(#arrow)"/>
+
+  <text x="160" y="710" class="section">使用順序：MLflow 先記錄 → Optuna 產生大量 trial → DVC 鎖住資料版本</text>
+</svg>

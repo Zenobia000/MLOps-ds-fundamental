@@ -90,7 +90,7 @@ check-env: ## 確認目前站在課程統一環境上（裝完、卡住時先跑
 
 mlflow-ui: ## 啟動本地 MLflow UI
 	@echo "[mlflow-ui] 開瀏覽器到 http://127.0.0.1:$(MLFLOW_PORT)"
-	mlflow ui --backend-store-uri $(MLRUNS_DIR) --port $(MLFLOW_PORT)
+	MLFLOW_ALLOW_FILE_STORE=true mlflow ui --backend-store-uri $(MLRUNS_DIR) --port $(MLFLOW_PORT)
 
 # ── 模組導覽（漸進解鎖：只指路，不展開全部教材）─────────────
 m1: ## m1 全景 / 基礎（階 0：純 Python + Git）

@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="810" viewBox="0 0 1440 810">
+  <defs>
+    <style>
+      .bg{fill:#fafafa}.title{font:700 42px "Noto Sans CJK TC","Arial",sans-serif;fill:#202124}
+      .section{font:700 24px "Noto Sans CJK TC","Arial",sans-serif;fill:#1a73e8}
+      .card-title{font:700 21px "Noto Sans CJK TC","Arial",sans-serif;fill:#202124}
+      .text{font:400 17px "Noto Sans CJK TC","Arial",sans-serif;fill:#3c4043}
+      .small{font:400 15px "Noto Sans CJK TC","Arial",sans-serif;fill:#5f6368}
+      .blue{stroke:#4285f4;fill:#fff}.red{stroke:#ea4335;fill:#fff}.yellow{stroke:#fbbc05;fill:#fff}.green{stroke:#34a853;fill:#fff}
+      .line{stroke:#5f6368;stroke-width:2;fill:none}.bline{stroke:#4285f4;stroke-width:3;fill:none}.rline{stroke:#ea4335;stroke-width:3;fill:none}.gline{stroke:#34a853;stroke-width:3;fill:none}
+    </style>
+    <marker id="blueArrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#4285f4"/></marker>
+    <marker id="redArrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#ea4335"/></marker>
+    <marker id="greenArrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#34a853"/></marker>
+  </defs>
+  <rect class="bg" width="1440" height="810"/>
+  <text x="720" y="68" text-anchor="middle" class="title">M3 Feast Feature Store：訓練與服務一致</text>
+
+  <text x="90" y="130" class="section">Data Sources</text>
+  <rect x="70" y="170" width="310" height="170" rx="14" class="blue" stroke-width="3"/>
+  <text x="105" y="212" class="card-title">predictors_df.parquet</text>
+  <text x="105" y="250" class="text">patient_id + event_timestamp</text>
+  <text x="105" y="284" class="text">8 predictor features</text>
+  <text x="105" y="318" class="small">offline training source</text>
+
+  <rect x="70" y="440" width="310" height="150" rx="14" class="red" stroke-width="3"/>
+  <text x="105" y="482" class="card-title">target_df.parquet</text>
+  <text x="105" y="520" class="text">Outcome label</text>
+  <text x="105" y="554" class="text">+1h after predictors</text>
+
+  <text x="515" y="130" class="section">Feast Contracts</text>
+  <rect x="470" y="170" width="320" height="170" rx="14" class="blue" stroke-width="3"/>
+  <text x="505" y="212" class="card-title">predictors_feature_view</text>
+  <text x="505" y="250" class="text">ttl: 2 days</text>
+  <text x="505" y="284" class="text">online: true</text>
+  <text x="505" y="318" class="small">source: predictors_source</text>
+
+  <rect x="470" y="440" width="320" height="150" rx="14" class="red" stroke-width="3"/>
+  <text x="505" y="482" class="card-title">target_feature_view</text>
+  <text x="505" y="520" class="text">ttl: 2 days</text>
+  <text x="505" y="554" class="text">source: target_source</text>
+
+  <rect x="845" y="300" width="250" height="150" rx="14" class="yellow" stroke-width="3"/>
+  <text x="880" y="342" class="card-title">Entity: patient</text>
+  <text x="880" y="380" class="text">join key: patient_id</text>
+  <text x="880" y="414" class="small">特徵屬於誰</text>
+
+  <text x="1130" y="130" class="section">Usage</text>
+  <rect x="1120" y="170" width="270" height="160" rx="14" class="blue" stroke-width="3"/>
+  <text x="1155" y="212" class="card-title">Training</text>
+  <text x="1155" y="250" class="text">point-in-time join</text>
+  <text x="1155" y="284" class="text">features + Outcome</text>
+
+  <rect x="1120" y="430" width="270" height="160" rx="14" class="green" stroke-width="3"/>
+  <text x="1155" y="472" class="card-title">Online Serving</text>
+  <text x="1155" y="510" class="text">materialize</text>
+  <text x="1155" y="544" class="text">lookup by patient_id</text>
+
+  <rect x="865" y="610" width="230" height="95" rx="14" fill="#fff" stroke="#dadce0" stroke-width="2"/>
+  <text x="900" y="650" class="card-title">registry.db</text>
+  <text x="900" y="682" class="small">stores feature contracts</text>
+
+  <path d="M380 255 L465 255" class="bline" marker-end="url(#blueArrow)"/>
+  <path d="M380 515 L465 515" class="rline" marker-end="url(#redArrow)"/>
+  <path d="M790 255 C830 255 835 340 845 360" class="bline" marker-end="url(#blueArrow)"/>
+  <path d="M790 515 C830 515 835 410 845 390" class="rline" marker-end="url(#redArrow)"/>
+  <path d="M1095 355 C1125 335 1110 265 1118 250" class="bline" marker-end="url(#blueArrow)"/>
+  <path d="M1095 395 C1125 415 1110 505 1118 510" class="gline" marker-end="url(#greenArrow)"/>
+  <path d="M970 450 L970 605" class="line"/>
+</svg>

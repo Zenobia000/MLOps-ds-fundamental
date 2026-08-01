@@ -15,7 +15,9 @@
 
 怎麼跑：
     python 02_mlflow_callback.py
-    mlflow ui     # 進實驗 iris-optuna-hpo，展開 parent run 看 20 個 child run 比較收斂
+    MLFLOW_ALLOW_FILE_STORE=true uv run mlflow ui --backend-store-uri ./mlruns --port 5000
+    # 進實驗 iris-optuna-hpo，展開 parent run 看 20 個 child run 比較收斂
+    # （新版 MLflow 預設擋掉純檔案 backend，一定要加這個環境變數，否則會報錯）
 """
 
 import os
@@ -81,7 +83,9 @@ def main() -> None:
 
     print("best_value =", round(study.best_value, 4))
     print("best_params =", study.best_params)
-    print("用 `mlflow ui` 進 iris-optuna-hpo，展開 optuna-search 看 20 個 child run")
+    print("進 iris-optuna-hpo，展開 optuna-search 看 20 個 child run")
+    print("開 UI：MLFLOW_ALLOW_FILE_STORE=true uv run mlflow ui "
+          "--backend-store-uri ./mlruns --port 5000 -> http://127.0.0.1:5000")
 
 
 if __name__ == "__main__":

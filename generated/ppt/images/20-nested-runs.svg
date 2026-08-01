@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 19 1265 427" width="1265" height="427" role="img" aria-label="A thick parent run bar above ten indented child run bars joined by a tree line, with one child highlighted in terracotta as the best trial">
+  <rect x="0" y="19" width="1265" height="427" fill="#F0EEE6"/>
+
+  <!-- parent run -->
+  <rect x="380" y="86" width="740" height="18" fill="#141413"/>
+
+  <!-- tree: vertical trunk + horizontal branches to each child -->
+  <g stroke="#141413" stroke-width="1.5" fill="none" opacity="0.45">
+    <path d="M 396 104 L 396 421"/>
+    <path d="M 396 145 L 410 145"/>
+    <path d="M 396 177 L 410 177"/>
+    <path d="M 396 209 L 410 209"/>
+    <path d="M 396 241 L 410 241"/>
+    <path d="M 396 273 L 410 273"/>
+    <path d="M 396 305 L 410 305"/>
+    <path d="M 396 337 L 410 337"/>
+    <path d="M 396 369 L 410 369"/>
+    <path d="M 396 401 L 410 401"/>
+    <path d="M 396 421 L 410 421"/>
+  </g>
+
+  <!-- trial markers: short accent segment at the left of each child -->
+  <g fill="#D97757">
+    <rect x="412" y="140" width="24" height="10"/>
+    <rect x="412" y="172" width="24" height="10"/>
+    <rect x="412" y="204" width="24" height="10"/>
+    <rect x="412" y="236" width="24" height="10"/>
+    <rect x="412" y="268" width="24" height="10"/>
+    <rect x="412" y="332" width="24" height="10"/>
+    <rect x="412" y="364" width="24" height="10"/>
+    <rect x="412" y="396" width="24" height="10"/>
+    <rect x="412" y="416" width="24" height="10"/>
+  </g>
+
+  <!-- child runs, indented -->
+  <g fill="#D0CCBF">
+    <rect x="448" y="140" width="560" height="10"/>
+    <rect x="448" y="172" width="512" height="10"/>
+    <rect x="448" y="204" width="604" height="10"/>
+    <rect x="448" y="236" width="540" height="10"/>
+    <rect x="448" y="268" width="588" height="10"/>
+    <rect x="448" y="332" width="620" height="10"/>
+    <rect x="448" y="364" width="552" height="10"/>
+    <rect x="448" y="396" width="504" height="10"/>
+    <rect x="448" y="416" width="576" height="10"/>
+  </g>
+
+  <!-- best trial: whole child row in accent, slightly heavier -->
+  <rect x="412" y="298" width="24" height="14" fill="#D97757"/>
+  <rect x="448" y="298" width="596" height="14" fill="#D97757"/>
+  <rect x="1060" y="296" width="18" height="18" fill="#D97757"/>
+</svg>
