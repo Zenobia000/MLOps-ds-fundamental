@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="14 50 1305 411" width="1305" height="411" role="img" aria-label="A container box holding four stacked blocks, with a terracotta port on its right edge wired across to a port on the host boundary">
+  <rect x="14" y="50" width="1305" height="411" fill="#F0EEE6"/>
+
+  <!-- container boundary -->
+  <rect x="330" y="110" width="430" height="280" fill="none" stroke="#141413" stroke-width="1.5"/>
+
+  <!-- what is sealed inside: python / sklearn / app / model -->
+  <g fill="#D0CCBF">
+    <rect x="370" y="160" width="160" height="72"/>
+    <rect x="552" y="160" width="160" height="72"/>
+    <rect x="370" y="256" width="160" height="72"/>
+    <rect x="552" y="256" width="160" height="72"/>
+  </g>
+  <g stroke="#141413" stroke-width="1.5" fill="none" opacity="0.35">
+    <rect x="370" y="160" width="160" height="72"/>
+    <rect x="552" y="160" width="160" height="72"/>
+    <rect x="370" y="256" width="160" height="72"/>
+    <rect x="552" y="256" width="160" height="72"/>
+  </g>
+
+  <!-- host boundary, outside the container -->
+  <rect x="900" y="70" width="280" height="360" fill="none" stroke="#141413" stroke-width="1.5" opacity="0.55"/>
+  <path d="M 940 130 L 1140 130" stroke="#141413" stroke-width="1.5" fill="none" opacity="0.22"/>
+  <path d="M 940 370 L 1140 370" stroke="#141413" stroke-width="1.5" fill="none" opacity="0.22"/>
+
+  <!-- the hole punched in the container wall, and its counterpart on the host -->
+  <rect x="750" y="230" width="20" height="40" fill="#D97757"/>
+  <rect x="890" y="230" width="20" height="40" fill="#D97757"/>
+
+  <!-- the mapping between the two ports -->
+  <path d="M 770 250 L 890 250" stroke="#D97757" stroke-width="3" fill="none"/>
+</svg>
