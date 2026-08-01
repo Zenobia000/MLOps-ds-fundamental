@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="516 32 440 436" width="440" height="436" role="img" aria-label="Two ROC curves on one set of axes: a terracotta curve hugging the top-left corner and a lower ink curve, with the inflated gap between them lightly shaded and a faint 45 degree dashed chance line behind both">
+  <rect x="516" y="32" width="440" height="436" fill="#F0EEE6"/>
+
+  <!-- plot frame: hairline axes only, bottom + left -->
+  <g stroke="#141413" stroke-width="1.5" fill="none" opacity="0.55">
+    <path d="M 550 60 L 550 440"/>
+    <path d="M 550 440 L 930 440"/>
+  </g>
+
+  <!-- tick marks: 0 / .5 / 1 on both axes -->
+  <g stroke="#141413" stroke-width="1.5" opacity="0.35">
+    <path d="M 550 440 l -8 0"/>
+    <path d="M 550 250 l -8 0"/>
+    <path d="M 550 60  l -8 0"/>
+    <path d="M 550 440 l 0 8"/>
+    <path d="M 740 440 l 0 8"/>
+    <path d="M 930 440 l 0 8"/>
+  </g>
+
+  <!-- the inflated band: area between the honest curve and the leaked curve -->
+  <path d="M 550 440 C 556 300, 570 175, 588 128 C 610 88, 660 72, 702 70 C 780 63, 860 60, 930 60
+           C 890 63, 812 79, 778 91 C 749 100, 731 109, 702 131 C 675 153, 653 178, 626 206
+           C 605 238, 573 300, 550 440 Z"
+        fill="#D97757" opacity="0.10"/>
+
+  <!-- chance line: 45 degree dashed diagonal = AUC 0.5 -->
+  <path d="M 550 440 L 930 60" stroke="#141413" stroke-width="2" stroke-dasharray="7 7" fill="none" opacity="0.25"/>
+
+  <!-- honest model: clearly above chance, but nowhere near the corner -->
+  <path d="M 550 440 C 573 300, 605 238, 626 206 C 653 178, 675 153, 702 131 C 731 109, 749 100, 778 91 C 812 79, 890 63, 930 60"
+        stroke="#141413" stroke-width="4" fill="none" stroke-linecap="round"/>
+
+  <!-- leaked model: exaggerated bulge, hugging the top-left corner -->
+  <path d="M 550 440 C 556 300, 570 175, 588 128 C 610 88, 660 72, 702 70 C 780 63, 860 60, 930 60"
+        stroke="#D97757" stroke-width="5" fill="none" stroke-linecap="round"/>
+
+  <!-- the perfect corner: small square anchor at top-left of the plot -->
+  <rect x="542" y="52" width="16" height="16" fill="#D97757"/>
+
+  <!-- chance anchor: hollow square on the diagonal midpoint -->
+  <rect x="733" y="243" width="14" height="14" fill="none" stroke="#141413" stroke-width="2" opacity="0.5"/>
+</svg>

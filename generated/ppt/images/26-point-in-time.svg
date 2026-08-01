@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="169 54 1143 360" width="1143" height="360" role="img" aria-label="A timeline with a vertical cut-off line: readings before the cut are solid dots, a value after the cut is marked with a cross, and a dashed curved arrow pulls it back into the shaded training row on the left">
+  <rect x="169" y="54" width="1143" height="360" fill="#F0EEE6"/>
+
+  <!-- time axis -->
+  <path d="M 300 250 L 1180 250" stroke="#141413" stroke-width="1.5" fill="none" opacity="0.55"/>
+  <g stroke="#141413" stroke-width="1.5" opacity="0.3">
+    <path d="M 340 250 l 0 10"/>
+    <path d="M 420 250 l 0 10"/>
+    <path d="M 500 250 l 0 10"/>
+    <path d="M 580 250 l 0 10"/>
+    <path d="M 660 250 l 0 10"/>
+    <path d="M 820 250 l 0 10"/>
+    <path d="M 940 250 l 0 10"/>
+    <path d="M 1060 250 l 0 10"/>
+    <path d="M 1160 250 l 0 10"/>
+  </g>
+
+  <!-- T: the prediction moment -->
+  <path d="M 740 120 L 740 400" stroke="#D97757" stroke-width="4" fill="none"/>
+
+  <!-- readings genuinely available at T -->
+  <g fill="#141413">
+    <circle cx="340" cy="250" r="8"/>
+    <circle cx="420" cy="250" r="8"/>
+    <circle cx="500" cy="250" r="8"/>
+    <circle cx="580" cy="250" r="8"/>
+    <circle cx="660" cy="250" r="8"/>
+  </g>
+
+  <!-- a value only measured after T -->
+  <g stroke="#D97757" stroke-width="6" stroke-linecap="butt">
+    <path d="M 918 228 L 962 272"/>
+    <path d="M 962 228 L 918 272"/>
+  </g>
+
+  <!-- the wrong join: the future value curled back into a training row -->
+  <path d="M 936 214 C 866 118, 640 138, 566 316"
+        stroke="#D97757" stroke-width="2.5" stroke-dasharray="8 7" fill="none"/>
+  <path d="M 556 306 L 578 302 L 566 332 Z" fill="#D97757"/>
+
+  <!-- the training row -->
+  <rect x="300" y="342" width="400" height="16" fill="#141413" opacity="0.3"/>
+  <path d="M 300 380 L 700 380" stroke="#141413" stroke-width="1.5" fill="none" opacity="0.25"/>
+
+  <!-- everything to the right of T is out of reach at prediction time -->
+  <path d="M 780 380 L 1180 380" stroke="#141413" stroke-width="1.5" stroke-dasharray="6 8" fill="none" opacity="0.3"/>
+</svg>
