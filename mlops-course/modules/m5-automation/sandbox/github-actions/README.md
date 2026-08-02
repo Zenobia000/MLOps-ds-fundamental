@@ -2,6 +2,8 @@
 
 > 一次一動詞：這個沙盒只教 GitHub Actions 的最小骨架 `on: push` -> 跑 `pytest`。
 > matrix、cache、OIDC、self-hosted runner **全部延後**。
+>
+> pytest 怎麼寫、怎麼與 CI 結合：[`../../pytest-introduction.md`](../../pytest-introduction.md) · [`../../assets/m5-pytest-ci.png`](../../assets/m5-pytest-ci.png)
 
 ## 這個沙盒在教什麼
 

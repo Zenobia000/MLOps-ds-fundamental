@@ -6,7 +6,8 @@
 把既有函式串成一條可觀測的 pipeline，用 **GitHub Actions**（階 10）讓每次 push
 自動跑測試當品質門檻。這一模組你第一次把「編排」與「CI」接上你的專案。
 
-> Prefect 編排概念圖與說明：[`prefect-introduction.md`](./prefect-introduction.md) · [`assets/m5-prefect-orchestration.png`](./assets/m5-prefect-orchestration.png)
+> Prefect 編排概念圖與說明：[`prefect-introduction.md`](./prefect-introduction.md) · [`assets/m5-prefect-orchestration.png`](./assets/m5-prefect-orchestration.png)  
+> pytest 怎麼寫、怎麼接 CI：[`pytest-introduction.md`](./pytest-introduction.md) · [`assets/m5-pytest-ci.png`](./assets/m5-pytest-ci.png)
 
 ### 先搞懂三組觀念（這模組的理論骨架）
 
@@ -71,7 +72,8 @@ cd ..            # 回到 sandbox/
 pip install pytest
 python -m pytest tests/ -v
 ```
-`tests/test_sample.py` 含一個 metric 單元測試與一組資料驗證測試。
+`tests/test_sample.py` 含一個 metric 單元測試與一組資料驗證測試。  
+怎麼寫、怎麼接 CI：見 [`pytest-introduction.md`](./pytest-introduction.md)。
 
 **(3) GitHub Actions：看懂最小 CI 範本**（只學 `on` / `runs-on` / `steps`）
 
