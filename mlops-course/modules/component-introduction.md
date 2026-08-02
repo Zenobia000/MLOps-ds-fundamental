@@ -257,7 +257,8 @@ Docker 是容器化工具。它回答的是：「我的服務能不能在別人�
 
 ### BentoML
 
-BentoML 是 ML 原生服務化框架。它比 FastAPI 更偏向「模型服務產品化」。
+BentoML 是 ML 原生服務化框架。它比 FastAPI 更偏向「模型服務產品化」。  
+**專頁**：[`m4-serving/bentoml-introduction.md`](./m4-serving/bentoml-introduction.md)（Model Store、Service、Bento、工作流與選型）。
 
 應用面：
 

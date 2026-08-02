@@ -1,7 +1,8 @@
 # 03 · BentoML:升級到 ML 原生服務框架(階 7)
 
 > 本沙盒只學一個動詞:**用 BentoML service 服務同一個 iris 模型**,
-> 並體會它跟 FastAPI 的差異。模型一樣現訓 iris,單檔自足。
+> 並體會它跟 FastAPI 的差異。模型一樣現訓 iris,單檔自足。  
+> 先讀概念：[`../../bentoml-introduction.md`](../../bentoml-introduction.md)
 
 ---
 

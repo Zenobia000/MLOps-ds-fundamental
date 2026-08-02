@@ -2,6 +2,8 @@
 
 > 本沙盒只學一個動詞:**把 01 的服務 `build` 成 image,再 `run` 起來**。
 > 程式碼一行都不用改——容器化的價值就是「不改程式、換環境也能跑」。
+>
+> 名詞、生命週期、常見指令、Compose 速查見：[`../../docker-introduction.md`](../../docker-introduction.md)
 
 ---
 
@@ -67,4 +69,4 @@ docker stop <CONTAINER_ID>
 | 探活 | `HEALTHCHECK` | 編排器判斷容器是否健康 |
 
 > 進階(本沙盒先不教,之後再回來):multi-stage build 縮小 image、
-> docker compose 一次起多個服務、非 root 使用者強化安全。
+> 非 root 使用者強化安全。Compose 最小範例與指令見 [`docker-introduction.md`](../../docker-introduction.md#6-docker-compose一次編排多服務)。

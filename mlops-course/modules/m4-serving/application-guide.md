@@ -168,7 +168,8 @@ docker run --rm -p 8000:8000 iris-fastapi:0.1
 
 ## BentoML 怎麼應用
 
-BentoML 是 ML 原生服務化框架。它幫你處理模型保存、服務定義、打包與容器化。
+BentoML 是 ML 原生服務化框架。它幫你處理模型保存、服務定義、打包與容器化。  
+概念與名詞詳解見 [`bentoml-introduction.md`](./bentoml-introduction.md)。
 
 FastAPI 與 BentoML 取捨：
 

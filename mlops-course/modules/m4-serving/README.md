@@ -27,6 +27,9 @@
 | FastAPI | 通用 web 框架,彈性最大、什麼都自己來 | 端點少、要塞進既有 web app |
 | BentoML | ML 原生,內建模型管理/打包/批次最佳化 | 純 ML 服務、要量產多模型多版本 |
 
+> Docker 指令、生命週期、Dockerfile / Image / Compose：[`docker-introduction.md`](./docker-introduction.md)  
+> BentoML 概念與工作流詳解：[`bentoml-introduction.md`](./bentoml-introduction.md)
+
 **GPU 服務關鍵字(階 8 會碰到的心智模型)**
 
 - **dynamic batching**:把多個請求湊成一批一起算,拉高 GPU 吞吐。
