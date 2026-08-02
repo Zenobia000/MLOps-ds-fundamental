@@ -2,6 +2,8 @@
 
 > 一次一動詞：這個沙盒只教 Prefect 的三個核心動詞 `@task` / `@flow` / 本地 `run`。
 > deployment、schedule、blocks **全部延後**，等你真的要排程時再回來。
+>
+> 編排概念說明與概念圖：[`../../prefect-introduction.md`](../../prefect-introduction.md) · [`../../assets/m5-prefect-orchestration.png`](../../assets/m5-prefect-orchestration.png)
 
 ## 這個沙盒在教什麼
 
@@ -20,20 +22,23 @@ Prefect 是「工作流程編排（workflow orchestration）」工具。它的�
 ## 怎麼跑
 
 ```bash
-# 1) 安裝（課程 pyproject.toml 已含 prefect；單獨裝也可以）
-pip install prefect
-
-# 2) 在本資料夾執行
+# 依賴不用另外裝，課程統一環境已含 prefect / pandas / scikit-learn。
+# 在本資料夾執行：
 python flow.py
 ```
 
 預期輸出（節錄）：
 
 ```
-[load_data] 已載入 100 筆玩具資料
-[train_eval] 評估完成，accuracy = 0.9xx
-[flow] pipeline 結束，最終 accuracy = 0.9xx
+[load_data] 已載入 150 筆 iris 資料，3 個類別
+[train_eval] 評估完成，accuracy = 0.967
+[flow] pipeline 結束，最終 accuracy = 0.967
 ```
+
+> 資料與模型**刻意沿用 M1 的 iris baseline**——同一份 `datasets/iris.csv`、
+> 同一顆 `SEED = 42`、同一個 LogisticRegression，所以 accuracy 跟你在 M1 跑出來的一致。
+> 這是故意的：這個沙盒沒有任何新的 ML，你才能把注意力全放在
+> 「加上 `@task` / `@flow` 之後多了什麼」。
 
 同時你會看到 Prefect 自動印出每個 task 的狀態流轉（`Running` -> `Completed`）。
 這就是 Prefect 幫你做的事：**不改你的邏輯，卻多了狀態追蹤與失敗重試的能力**。
@@ -41,20 +46,26 @@ python flow.py
 ## 看一眼程式（`flow.py`）
 
 ```python
-@task
-def load_data() -> list[dict]: ...      # 步驟一：載入玩具資料
+def find_iris_csv() -> Path: ...        # 純路徑計算，刻意不加 @task
 
 @task
-def train_eval(data) -> float: ...      # 步驟二：訓練 + 評估
+def load_data() -> pd.DataFrame: ...    # 步驟一：讀 datasets/iris.csv
 
-@flow(name="toy-train-flow")
+@task
+def train_eval(df) -> float: ...        # 步驟二：訓練 + 評估
+
+@flow(name="iris-train-flow")
 def main() -> float:
-    data = load_data()                  # flow 內呼叫 task，Prefect 自動串接
-    return train_eval(data)             # 上一個 task 的輸出 -> 下一個的輸入
+    df = load_data()                    # flow 內呼叫 task，Prefect 自動串接
+    return train_eval(df)               # 上一個 task 的輸出 -> 下一個的輸入
 
 if __name__ == "__main__":
     main()                              # 本地 run，零 server
 ```
+
+> 注意 `find_iris_csv()` **沒有** `@task`。判準不是「是不是函式」，而是
+> 「值不值得被單獨追蹤與重試」——它只是算路徑，包成 task 只會讓執行圖
+> 多一個沒資訊量的節點。什麼該切成 task，是 Prefect 用起來最常見的取捨。
 
 ## 明確延後（先不要學）
 

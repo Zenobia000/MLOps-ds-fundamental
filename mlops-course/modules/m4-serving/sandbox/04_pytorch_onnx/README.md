@@ -4,7 +4,9 @@
 > 全程強制 CPU(無 GPU 後援),用極小假資料跑通流程,不追求準確率。
 >
 > CV backbone / 模型架構概念圖：[`../../assets/m4-cv-backbone.png`](../../assets/m4-cv-backbone.png)  
-> 影像處理 pipeline（Resize → ToTensor → Normalize）：[`../../cv-image-pipeline.md`](../../cv-image-pipeline.md) · [`../../assets/m4-cv-image-pipeline.png`](../../assets/m4-cv-image-pipeline.png)
+> 影像處理 pipeline（Resize → ToTensor → Normalize）：[`../../cv-image-pipeline.md`](../../cv-image-pipeline.md) · [`../../assets/m4-cv-image-pipeline.png`](../../assets/m4-cv-image-pipeline.png)  
+> ONNX / ONNX Runtime / TensorRT：[`../../onnx-introduction.md`](../../onnx-introduction.md) · [`../../assets/m4-onnx-runtime-tensorrt.png`](../../assets/m4-onnx-runtime-tensorrt.png)  
+> 張量各維 index（NCHW）：[`../../assets/m4-tensor-axes-nchw.png`](../../assets/m4-tensor-axes-nchw.png)
 
 ---
 
@@ -60,6 +62,14 @@ python export_onnx.py
 
 學到的觀念:**動態 batch 維**(服務時可一次吃多筆 = dynamic batching 的前提)、
 **int8 量化**(模型更小、CPU 推論更快,精度略降)。
+
+層次別搞混（詳見 [`onnx-introduction.md`](../../onnx-introduction.md)）：
+
+| 名稱 | 是什麼 | 本課 |
+| :--- | :--- | :--- |
+| **ONNX** | 中立模型**格式**（`.onnx`） | `export_onnx.py` 產出 |
+| **ONNX Runtime** | 讀 ONNX 並執行的**引擎** | `serve_bento.py`、量化 |
+| **TensorRT** | NVIDIA GPU **加速引擎**（常以 ONNX 當入口） | 本課不跑；正式 GPU 常見 |
 
 ## 3. 用 BentoML 服務 ONNX
 

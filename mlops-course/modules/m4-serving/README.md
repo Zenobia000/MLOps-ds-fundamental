@@ -28,7 +28,8 @@
 | BentoML | ML 原生,內建模型管理/打包/批次最佳化 | 純 ML 服務、要量產多模型多版本 |
 
 > Docker 指令、生命週期、Dockerfile / Image / Compose：[`docker-introduction.md`](./docker-introduction.md)  
-> BentoML 概念與工作流詳解：[`bentoml-introduction.md`](./bentoml-introduction.md)
+> BentoML 概念與工作流詳解：[`bentoml-introduction.md`](./bentoml-introduction.md)  
+> ONNX / ONNX Runtime / TensorRT：[`onnx-introduction.md`](./onnx-introduction.md)
 
 **GPU 服務關鍵字(階 8 會碰到的心智模型)**
 

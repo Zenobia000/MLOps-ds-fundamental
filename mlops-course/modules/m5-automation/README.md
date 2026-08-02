@@ -6,6 +6,8 @@
 把既有函式串成一條可觀測的 pipeline，用 **GitHub Actions**（階 10）讓每次 push
 自動跑測試當品質門檻。這一模組你第一次把「編排」與「CI」接上你的專案。
 
+> Prefect 編排概念圖與說明：[`prefect-introduction.md`](./prefect-introduction.md) · [`assets/m5-prefect-orchestration.png`](./assets/m5-prefect-orchestration.png)
+
 ### 先搞懂三組觀念（這模組的理論骨架）
 
 **CI/CD vs CT（持續訓練）** —— ML 比一般軟體多了一條「資料/模型」的軸線：

@@ -5,8 +5,10 @@
     為什麼要 ONNX(打包格式的取捨):
         - pickle / .pt(state_dict):綁死 Python + 同版 PyTorch,跨語言/跨框架難。
         - TorchScript:序列化計算圖,可脫離 Python 原始碼,但仍是 PyTorch 生態。
-        - ONNX:開放標準中間表示,可被 ONNX Runtime / TensorRT / 各家硬體
-          加速器執行,跨框架、跨語言、好做量化——服務化常見的「中立交換格式」。
+        - ONNX:開放標準中間表示(格式/檔案),不是推論引擎本身。
+          真正執行的是後端:ONNX Runtime(通用)、TensorRT(NVIDIA GPU 加速)等。
+          跨框架、跨語言、好做量化——服務化常見的「中立交換格式」。
+          完整說明見 ../../onnx-introduction.md
 
     本檔也示範「動態量化(dynamic quantization)」的最小說明:
         把權重從 float32 壓成 int8,模型更小、CPU 推論更快,
@@ -45,7 +47,10 @@ def load_trained_model() -> nn.Module:
 
 def export_to_onnx(model: nn.Module) -> None:
     """把模型匯出成 ONNX,並設定 batch 維度為動態(支援不同 batch size)。"""
-    # ONNX 匯出需要一個「範例輸入」來追蹤計算圖
+    # ONNX 匯出需要一個「範例輸入」來追蹤計算圖。
+    # 形狀是 NCHW:(N=batch, C=channel, H=height, W=width)
+    #   1 × 3 × 224 × 224 → 1 張圖、RGB 3 通道、高 224、寬 224
+    # 各維 index 含義見 ../../assets/m4-tensor-axes-nchw.png
     dummy_input = torch.randn(1, 3, IMAGE_SIZE, IMAGE_SIZE, device=DEVICE)
 
     torch.onnx.export(

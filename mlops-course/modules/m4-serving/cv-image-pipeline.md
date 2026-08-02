@@ -53,7 +53,27 @@ transforms.Compose([
 | Normalize | `3×224×224` | float32 | 約 -2 ~ +2（視影像而定） |
 | + batch | `N×3×224×224` | float32 | 同上 |
 
-> PyTorch / torchvision 慣例是 **NCHW**（batch, channel, height, width），不是 OpenCV 常見的 HWC。
+> PyTorch / torchvision 慣例是 **NCHW**（batch, channel, height, width），不是 OpenCV 常見的 HWC。  
+> 各維 index 含義概念圖：[`assets/m4-tensor-axes-nchw.png`](./assets/m4-tensor-axes-nchw.png)
+
+### 2.1 訓練資料張量：每個 index 對應什麼？
+
+對應 `export_onnx.py` 的：
+
+```python
+dummy_input = torch.randn(1, 3, IMAGE_SIZE, IMAGE_SIZE)  # (N, C, H, W)
+```
+
+| 維度 | 符號 | 名稱 | 本課值 | 意義 |
+| :--- | :--- | :--- | :--- | :--- |
+| 第 0 維 | **N** | Batch | `1`（可動態） | 這一步一次餵幾筆樣本 |
+| 第 1 維 | **C** | Channel | `3` | 顏色通道：0=R, 1=G, 2=B |
+| 第 2 維 | **H** | Height | `224` | 影像高度（列） |
+| 第 3 維 | **W** | Width | `224` | 影像寬度（行） |
+
+索引例子：`x[0, 1, 10, 20]` = **第 0 張圖、綠色通道、第 10 列、第 20 行** 的那個像素值。
+
+`dynamic_axes={"input": {0: "batch"}, ...}` 的意思：匯出 ONNX 時把 **N 維放寬**，服務時可吃 `1`、`8`、`32` 等不同 batch，不必鎖死成匯出時的 `1`。
 
 ---
 
