@@ -58,7 +58,7 @@ def build_model() -> nn.Module:
 
     return model.to(DEVICE)
 
-
+    
 def make_fake_batch() -> tuple[torch.Tensor, torch.Tensor]:
     """產生一批極小的隨機假影像與標籤,純粹為了跑通訓練迴圈。"""
     images = torch.randn(NUM_FAKE_SAMPLES, 3, IMAGE_SIZE, IMAGE_SIZE)
@@ -100,6 +100,12 @@ if __name__ == "__main__":
 
 # --- 要換成真實資料(CIFAR-10 子集)時,把 make_fake_batch 換成: ---
 #
+# 影像進模型前必須走完整 preprocess(詳見 ../../cv-image-pipeline.md):
+#   1) Resize(224)     → 尺寸對齊 ResNet 輸入
+#   2) ToTensor()      → HWC→CHW、uint8→float32、像素 /255 變成 0~1
+#   3) Normalize(...)  → 用 ImageNet mean/std;預訓練權重就是在這組統計上訓的
+# 訓練與線上推論必須共用同一條 pipeline,否則會 training-serving skew。
+#
 # from torchvision import datasets, transforms
 # from torch.utils.data import DataLoader, Subset
 #
@@ -114,3 +120,4 @@ if __name__ == "__main__":
 # subset = Subset(full, range(256))            # 只取 256 筆,CPU 也能跑
 # loader = DataLoader(subset, batch_size=32, shuffle=True)
 # 然後把訓練迴圈改成 for images, labels in loader: ...
+# batch shape 應為 (B, 3, 224, 224)

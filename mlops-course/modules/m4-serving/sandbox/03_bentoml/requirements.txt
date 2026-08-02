@@ -5,10 +5,15 @@
 # 為什麼釘死版本:交付物要每次 build 都一致,所以用 == 精確鎖定。
 #
 # ★ 不要在你的課程 venv 裡跑 pip install -r 這個檔 ★
-#   版本與 mlops-course/uv.lock 不同,裝下去會把課程環境降級。
-#   要在本機跑 service.py,課程環境已經有 bentoml/sklearn。
+#   課程環境(mlops-course/uv.lock)已經有 bentoml/sklearn,重裝只是多此一舉。
 #
-# 03_bentoml 沙盒依賴
-bentoml==1.3.4
-scikit-learn==1.5.2
-numpy==2.1.1
+# ★ 這裡的版本必須跟課程環境一致 ★
+#   Model Store 裡的 sklearn 模型是 pickle。你在本機用 A 版訓練存檔,
+#   bento 裡卻裝 B 版載入,輕則 InconsistentVersionWarning,重則反序列化失敗——
+#   「本機好好的,進 image 就掛」的典型死法。
+#   升級課程環境時記得同步這裡,這正是 m2 在教的「鎖版本才可重現」。
+#
+# 03_bentoml 沙盒依賴(對齊 uv.lock,2026-08-02 校對)
+bentoml==1.4.39
+scikit-learn==1.9.0
+numpy==1.26.4

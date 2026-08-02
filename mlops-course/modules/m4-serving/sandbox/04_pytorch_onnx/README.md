@@ -2,6 +2,9 @@
 
 > 本沙盒把三步串成一條線:**遷移學習訓練 → 匯出 ONNX → 用 BentoML 服務**。
 > 全程強制 CPU(無 GPU 後援),用極小假資料跑通流程,不追求準確率。
+>
+> CV backbone / 模型架構概念圖：[`../../assets/m4-cv-backbone.png`](../../assets/m4-cv-backbone.png)  
+> 影像處理 pipeline（Resize → ToTensor → Normalize）：[`../../cv-image-pipeline.md`](../../cv-image-pipeline.md) · [`../../assets/m4-cv-image-pipeline.png`](../../assets/m4-cv-image-pipeline.png)
 
 ---
 
@@ -39,6 +42,13 @@ python train_resnet.py
 
 學到的觀念:**凍結 backbone**(`requires_grad=False`)+ **換最後一層**
 (`model.fc = nn.Linear(...)`),只訓練分類頭。
+
+架構拆兩塊（對應概念圖）：
+
+| 區塊 | 角色 | 本課做法 |
+| :--- | :--- | :--- |
+| **Backbone** | 特徵抽取器（卷積層） | ImageNet 預訓練 ResNet18，`requires_grad=False` |
+| **Classification head** | 對新任務分類 | 換成 `nn.Linear(in_features, NUM_CLASSES)`，只訓這一層 |
 
 ## 2. 匯出 ONNX(+ 量化說明)
 

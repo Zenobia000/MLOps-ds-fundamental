@@ -13,10 +13,11 @@
         一個 class = 一個 service,方法上加 @bentoml.api 就是一個端點。
 
 怎麼跑:
-    pip install -r requirements.txt
+    # 依賴不用另外裝,課程統一環境已含 bentoml / scikit-learn。
+    # (同層 requirements.txt 是給 bentofile.yaml 打包用的,別裝進 venv)
 
-    # 第一次要先把模型存進 BentoML 的 Model Store
-    python service.py        # 直接執行會觸發底部的「存模型」流程
+    # 確認 Model Store 內有模型(沒有就現訓現存),並印出 tag
+    python service.py
 
     # 起服務(--reload 開發時自動重載)
     bentoml serve service:IrisClassifier --reload
@@ -37,8 +38,8 @@ CLASS_NAMES = ["setosa", "versicolor", "virginica"]
 MODEL_NAME = "iris_clf"
 
 
-def save_model_to_store() -> None:
-    """現訓 iris 並把模型存進 BentoML 的 Model Store。
+def save_model_to_store() -> "bentoml.Tag":
+    """現訓 iris 並把模型存進 BentoML 的 Model Store,回傳新版本的 tag。
 
     Model Store 是 BentoML 內建的「模型倉庫」,服務啟動時用名稱載回——
     這正是 BentoML 比 FastAPI 多出來的 ML 原生能力:模型有版本、可追溯。
@@ -49,21 +50,27 @@ def save_model_to_store() -> None:
     model.fit(X, y)
     saved = bentoml.sklearn.save_model(MODEL_NAME, model)
     print(f"模型已存入 BentoML Model Store: {saved.tag}")
+    return saved.tag
 
 
-def _ensure_model() -> "bentoml.Model":
-    """確保 Model Store 內有模型;不存在就現訓現存。
+def _ensure_model_in_store() -> "bentoml.Tag":
+    """確保 Model Store 內有模型;不存在才現訓現存。回傳現有(或新建)版本的 tag。
 
-    為什麼需要這個:class 屬性 ``bento_model = bentoml.models.get(...)`` 會在
-    「class 定義時(即 import 時)」就執行,早於 ``__main__`` 的存模型。若 store
-    內還沒有模型,import / serve 都會直接 NotFound 崩潰。這裡讓服務「自我 bootstrap」:
-    第一次起服務若沒模型,就自動建立,學生不必先手動跑一次存模型。
+    為什麼需要這個:``bentoml serve`` 是直接 import 本檔、不會走 ``__main__``,
+    所以 store 內若還沒有模型,serve 會在載入模型時 NotFound 崩潰。這裡讓服務
+    「自我 bootstrap」:第一次起服務沒模型就自動建立,學生不必先手動存一次。
+
+    注意這是**唯一**的寫入點——``__main__`` 只回報結果、不再存一份,
+    否則冷啟動時一次執行會產生兩個版本。
     """
     try:
-        return bentoml.models.get(f"{MODEL_NAME}:latest")
+        return bentoml.models.get(f"{MODEL_NAME}:latest").tag
     except bentoml.exceptions.NotFound:
-        save_model_to_store()
-        return bentoml.models.get(f"{MODEL_NAME}:latest")
+        return save_model_to_store()
+
+
+# import 本 module 就保證 Model Store 可用(serve 與 __main__ 共用這一條路徑)。
+MODEL_TAG = _ensure_model_in_store()
 
 
 @bentoml.service(
@@ -76,8 +83,10 @@ class IrisClassifier:
     """一個 BentoML service:啟動時從 Model Store 載入最新版 iris 模型。"""
 
     # 在 class 屬性宣告「我要用哪個模型」,BentoML 啟動時自動注入。
-    # 用 _ensure_model() 而非裸 get：store 內沒有時自動建立,避免 import/serve 崩潰。
-    bento_model = _ensure_model()
+    # 用 BentoModel(tag) 這個「延遲參照」而非 bentoml.models.get():
+    #   get() 會在 import 當下就去 store 撈實體,BentoML 1.4 已不建議;
+    #   BentoModel 只記下 tag,等 service 真正啟動才解析,也讓 build 時能追蹤依賴。
+    bento_model = bentoml.models.BentoModel(f"{MODEL_NAME}:latest")
 
     def __init__(self) -> None:
         # 把存好的模型載成可呼叫的 runner/物件
@@ -101,6 +110,7 @@ class IrisClassifier:
 
 
 if __name__ == "__main__":
-    # 直接 `python service.py` 時,先把模型存進 Model Store,
-    # 之後才能用 `bentoml serve` 起服務。
-    save_model_to_store()
+    # 模組層的 _ensure_model_in_store() 在 import 階段就跑過了,Model Store
+    # 此刻必定可用。這裡只回報結果——刻意不再存一次,避免同一次執行產生兩個版本。
+    print(f"Model Store 已就緒: {MODEL_TAG}")
+    print("下一步: bentoml serve service:IrisClassifier --reload")

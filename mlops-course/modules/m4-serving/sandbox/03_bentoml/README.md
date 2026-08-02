@@ -25,13 +25,16 @@
 （`mlops-course/uv.lock` 鎖定版本）。
 
 > 本資料夾的 `requirements.txt` **是給 `bentofile.yaml` 打包 Bento 映像用的**，
-> 版本刻意釘死且與課程環境不同。別在你的 venv 裡裝它。
+> 版本刻意釘死（`==`），且與課程環境保持一致——模型是 pickle，
+> 訓練端與 bento 內的 sklearn 版本對不上就會載不回來。別在你的 venv 裡裝它。
 
 ## 2. 先把模型存進 Model Store
 
 ```bash
 python service.py
 # 模型已存入 BentoML Model Store: iris_clf:xxxxxx
+# Model Store 已就緒: iris_clf:xxxxxx
+# 下一步: bentoml serve service:IrisClassifier --reload
 ```
 
 確認存進去了:
@@ -39,6 +42,10 @@ python service.py
 ```bash
 bentoml models list
 ```
+
+> 這步其實是**選配**。`service.py` 在 import 時就會自我 bootstrap：
+> Model Store 沒有模型就現訓現存，所以直接跳到第 3 步 `bentoml serve` 也能起來。
+> 重跑 `python service.py` 不會一直長出新版本——已存在就沿用，不重存。
 
 ## 3. 起服務
 
