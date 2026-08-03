@@ -1,0 +1,224 @@
+# =============================================================================
+# openapi.yaml — Smart Factory 推論服務對外契約（機器可讀版）
+# -----------------------------------------------------------------------------
+# 說明版見 api_spec.md。權威來源是程式碼：
+#   端點 → services/service.py（@bentoml.api）
+#   結構 → src/serving/schemas.py（Pydantic）
+# 三者不一致時以程式碼為準，並回頭修本檔與 api_spec.md。
+#
+# 路由說明：BentoML 依 @bentoml.api 的方法名產生路徑，故路徑即方法名。
+# =============================================================================
+openapi: 3.1.0
+
+info:
+  title: Smart Factory MLOps — Inference API
+  version: "1.0.0"
+  description: |
+    智慧工廠統一推論服務：表格模型（預測性維護）＋ 影像模型（瑕疵檢測）。
+    兩個模型獨立降級——其中一個未就緒時該端點回 503，另一個仍可服務，
+    整體狀態由 /healthz 的 status 反映（ok / degraded）。
+
+servers:
+  - url: http://localhost:3000
+    description: 本機（make serve）
+
+tags:
+  - name: inference
+  - name: health
+
+paths:
+  /predict_maintenance:
+    post:
+      tags: [inference]
+      summary: 預測性維護批次推論
+      description: 一次送 1–1000 筆感測讀數，回傳每台設備的故障機率與判定。
+      operationId: predictMaintenance
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MaintenanceRequest"
+      responses:
+        "200":
+          description: 推論成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaintenanceResponse"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "503":
+          $ref: "#/components/responses/ModelUnavailable"
+
+  /predict_defect:
+    post:
+      tags: [inference]
+      summary: 瑕疵檢測（單張影像）
+      description: 上傳單張影像；服務端一律轉 RGB 並 resize 至模型輸入尺寸。
+      operationId: predictDefect
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [image]
+              properties:
+                image:
+                  type: string
+                  format: binary
+                  description: 影像檔（PNG / JPEG）
+      responses:
+        "200":
+          description: 推論成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefectResponse"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "503":
+          $ref: "#/components/responses/ModelUnavailable"
+
+  /healthz:
+    post:
+      tags: [health]
+      summary: 健康檢查
+      description: |
+        分別回報兩個模型是否就緒。兩個都就緒才是 ok，否則 degraded。
+        degraded 代表服務活著但功能不完整——liveness 探測不該因此重啟，
+        但 readiness 與告警應該注意。
+      operationId: healthz
+      responses:
+        "200":
+          description: 狀態回報（degraded 也是 200）
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+
+components:
+  responses:
+    ValidationError:
+      description: 輸入未通過 schema 驗證（缺欄位 / 型別錯 / 超出範圍 / 批次筆數越界）
+    ModelUnavailable:
+      description: 對應模型未就緒（registry 與本地產物皆不可用）
+
+  schemas:
+    SensorReading:
+      type: object
+      required: [machine_id, temperature, vibration, current]
+      properties:
+        machine_id:
+          type: string
+          description: 設備實體 ID（對齊 Feast entity）
+          examples: ["machine_01"]
+        event_timestamp:
+          type: [string, "null"]
+          format: date-time
+          description: 事件時間戳（ISO 8601）。純表格推論可省略。
+        temperature:
+          type: number
+          format: float
+          minimum: -50.0
+          maximum: 500.0
+          description: 溫度感測值；範圍用於擋掉感測器故障的離譜值
+        vibration:
+          type: number
+          format: float
+          minimum: 0.0
+        current:
+          type: number
+          format: float
+          minimum: 0.0
+
+    MaintenanceRequest:
+      type: object
+      required: [readings]
+      properties:
+        readings:
+          type: array
+          minItems: 1
+          maxItems: 1000
+          description: 批次上限 1000，防止單一請求耗盡記憶體
+          items:
+            $ref: "#/components/schemas/SensorReading"
+
+    MaintenancePrediction:
+      type: object
+      required: [machine_id, failure_probability, will_fail]
+      properties:
+        machine_id:
+          type: string
+        failure_probability:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+        will_fail:
+          type: boolean
+          description: failure_probability >= threshold
+
+    MaintenanceResponse:
+      type: object
+      required: [model_name, model_version, threshold, predictions]
+      properties:
+        model_name:
+          type: string
+          description: 實際命中的 registry 模型名稱
+        model_version:
+          type: string
+          description: |
+            Production / Staging = 來自 registry；
+            local = registry 不可用而回退讀本地檔案，生產環境應視為告警。
+          examples: ["Production", "local"]
+        threshold:
+          type: number
+          format: float
+        predictions:
+          type: array
+          items:
+            $ref: "#/components/schemas/MaintenancePrediction"
+
+    DefectPrediction:
+      type: object
+      required: [label, defect_probability]
+      properties:
+        label:
+          type: string
+          enum: [good, defect]
+        defect_probability:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+
+    DefectResponse:
+      type: object
+      required: [model_name, model_version, threshold, prediction]
+      properties:
+        model_name:
+          type: string
+        model_version:
+          type: string
+        threshold:
+          type: number
+          format: float
+        prediction:
+          $ref: "#/components/schemas/DefectPrediction"
+
+    HealthResponse:
+      type: object
+      required: [status, tabular_model_loaded, vision_model_loaded]
+      properties:
+        status:
+          type: string
+          enum: [ok, degraded]
+          default: ok
+        tabular_model_loaded:
+          type: boolean
+          default: false
+        vision_model_loaded:
+          type: boolean
+          default: false
