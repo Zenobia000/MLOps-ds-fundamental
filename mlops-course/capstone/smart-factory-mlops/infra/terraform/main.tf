@@ -50,11 +50,11 @@ resource "random_id" "artifact_suffix" {
 resource "local_file" "artifact_store_descriptor" {
   filename = "${path.module}/.generated/artifact_store.json"
   content = jsonencode({
-    bucket      = "${var.mlflow_artifact_bucket_name}-${random_id.artifact_suffix.hex}"
-    region      = var.region
-    versioning  = true
-    encryption  = "AES256"
-    tags        = local.common_tags
+    bucket     = "${var.mlflow_artifact_bucket_name}-${random_id.artifact_suffix.hex}"
+    region     = var.region
+    versioning = true
+    encryption = "AES256"
+    tags       = local.common_tags
   })
 }
 
@@ -67,7 +67,7 @@ resource "local_file" "mlflow_service_descriptor" {
     image = var.mlflow_image
     port  = 5000
     env = {
-      MLFLOW_BACKEND_STORE_URI    = "postgresql://mlflow@db:5432/mlflow"
+      MLFLOW_BACKEND_STORE_URI     = "postgresql://mlflow@db:5432/mlflow"
       MLFLOW_DEFAULT_ARTIFACT_ROOT = "s3://${var.mlflow_artifact_bucket_name}-${random_id.artifact_suffix.hex}"
       # 密碼不寫入描述檔，僅標記由 secret manager 注入。
       MLFLOW_DB_PASSWORD_REF = "secret-manager://${local.name_prefix}/db_password"

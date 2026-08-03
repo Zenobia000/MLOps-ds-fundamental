@@ -233,7 +233,14 @@ flowchart TB
     GRAF --> PROM
 ```
 
-`infra/terraform/` 目前只有 README，**沒有可用的 IaC**——雲端部署尚未實作。
+`infra/terraform/` 有可運作的示意性 IaC（`main.tf` / `variables.tf` / `outputs.tf`）：
+用 `local` + `random` provider，**不需要雲端憑證就能 `terraform plan/apply`**，
+產出的是各資源的描述檔（`.generated/*.json`），示範變數化、命名前綴、遠端 state 的結構。
+真實部署時把 `local_file` 換成對應雲商資源即可（對照表見 `infra/terraform/README.md`）。
+
+> 秘密處理值得看一眼：`db_password` 沒有 default，且 `main.tf` 用 `precondition` 強制它被注入；
+> 已驗證密碼不會出現在 plan 內容裡。但 **`terraform.tfstate` 仍會明文保存它**——
+> `sensitive` 只影響 CLI 顯示、不加密 state 檔，所以 state 已列入 `.gitignore`。
 
 ---
 
@@ -254,8 +261,9 @@ flowchart TB
 
 | 風險 | 影響 | 現況 / 緩解 |
 | :--- | :--- | :--- |
-| **canary 探測是佔位** | 部署管線的 promote 決策不可信 | 已記錄於 [ADR-005](adr/ADR-005-deployment-placeholders.md)，接真實流量探測前不可用於生產 |
-| **無 IaC** | 環境靠手動 compose，無法一鍵複製到雲端 | `infra/terraform/` 待實作 |
+| **canary 只驗健康、不驗品質** | 載得起來但預測很爛的模型仍會通過 canary | 模型品質由訓練期品質門檻負責，兩道關卡守不同的東西（[ADR-005](adr/ADR-005-deployment-placeholders.md)）|
+| **IaC 是示意性的** | 產出描述檔而非真實雲端資源，無法一鍵起雲端環境 | 結構與秘密處理都是可用的；換成雲商 provider 即可（`infra/terraform/README.md` 有對照表）|
+| **registry 全不可用時仍會落到硬編 URI** | `resolve_model` 的最終後援是猜的 | 真實部署應在此失敗而非猜測，見 ADR-005「仍未解除的部分」|
 | **玩具資料** | 指標無業務意義（vision 的 f1 常為 0） | 品質門檻會正確擋下註冊，行為是對的；接真實資料是 Capstone 練習 |
 | **online store 用 SQLite** | 無法水平擴展、無高可用 | 教學規模足夠；生產需換 Redis/DynamoDB（compose 已預留 redis） |
 | **概念漂移偵測不到** | 模型悄悄失效 | Evidently 只抓得到 covariate drift；label 回流機制未建，見 [runbook](../ops/runbook-drift-alert.md) |

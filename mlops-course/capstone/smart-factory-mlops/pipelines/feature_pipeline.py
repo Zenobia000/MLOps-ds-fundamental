@@ -61,19 +61,26 @@ def validate(df: pd.DataFrame) -> pd.DataFrame:
 
 @task
 def build_features(df: pd.DataFrame) -> pd.DataFrame:
-    """特徵工程：優先 src.features.build_features，後援為分組滾動均值/標準差。"""
-    builder = soft_import("src.features.build_features", "build_sensor_features")
-    if builder is not None:
-        return builder(df)
+    """特徵工程：一律委派給 src.features.build_features。
 
-    out = df.sort_values([ENTITY_COL, TIMESTAMP_COL]).copy()
-    g = out.groupby(ENTITY_COL)
-    for col in ("temperature", "vibration", "current"):
-        out[f"{col}_roll_mean_3"] = g[col].transform(lambda s: s.rolling(3, min_periods=1).mean())
-        out[f"{col}_roll_std_3"] = g[col].transform(
-            lambda s: s.rolling(3, min_periods=1).std().fillna(0.0)
+    ★ 這裡刻意「沒有後援」。
+
+    先前這支在 src.features 載不到時，會在管線內**自己重算一份**滾動均值／標準差。
+    那份副本跟 src/features/build_features.py 是兩份程式碼，一旦其中一份改了視窗大小、
+    改了 fillna 策略、或多加一個特徵，管線算出來的特徵就與訓練期不同——
+    而且**不會有任何錯誤訊息**，只會得到一個安靜地變差的模型。
+    那正是本專案存在要防的 training/serving skew。
+
+    所以現在的選擇是：載不到就大聲失敗。特徵定義只能有一個真相來源。
+    """
+    builder = soft_import("src.features.build_features", "build_sensor_features")
+    if builder is None:
+        raise RuntimeError(
+            "找不到 src.features.build_features.build_sensor_features。"
+            "特徵計算不提供後援實作——兩份特徵邏輯會造成訓練/服務不一致。"
+            "請確認在專案根目錄執行，且已 make setup。"
         )
-    return out.reset_index(drop=True)
+    return builder(df)
 
 
 @task
