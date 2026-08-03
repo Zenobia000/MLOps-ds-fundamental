@@ -21,6 +21,7 @@ from typing import Any
 
 from src.training._trainers import TrainArtifacts, train_one
 from src.training.evaluate import quality_gate
+from src.training.registry import register_model
 from src.utils.config import load_config
 from src.utils.logging import get_logger
 from src.utils.seed import set_seed
@@ -40,16 +41,18 @@ def _setup_mlflow(cfg: Mapping[str, Any]):
 
 
 def _register_and_alias(mlflow, model_info, art: TrainArtifacts, cfg: Mapping[str, Any]) -> None:
-    """把模型註冊進 registry 並打 alias（champion）。失敗不致命，只記錄警告。"""
-    registry_name = f"{cfg.get('project', 'smart-factory')}-{art.model_name}"
-    try:
-        result = mlflow.register_model(model_info.model_uri, registry_name)
-        client = mlflow.tracking.MlflowClient()
-        # 新版 MLflow 用 alias 取代 stage；champion 指向當前最佳版本。
-        client.set_registered_model_alias(registry_name, "champion", result.version)
-        logger.info("已註冊模型 %s v%s 並打 alias=champion", registry_name, result.version)
-    except Exception as exc:  # noqa: BLE001 — 離線 / 教學環境註冊可失敗
-        logger.warning("模型註冊失敗（%s），略過（不影響本地產物）。", exc)
+    """把模型註冊進 registry 並打 alias（champion）。
+
+    實作已抽到 ``src.training.registry``，讓走 Prefect flow 的那條路徑
+    （``pipelines/training_pipeline.py``）能共用同一份邏輯——
+    否則會出現「用 make 訓練會註冊、用 flow 訓練不會」的不一致。
+    """
+    register_model(
+        model_info,
+        art.metrics,
+        cfg,
+        model_name=art.model_name,
+    )
 
 
 def run(cfg: Mapping[str, Any]) -> TrainArtifacts:

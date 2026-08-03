@@ -27,9 +27,9 @@
 
 | 項目 | 值 |
 | :--- | :--- |
-| 對應 commit | `1908b66` |
+| 對應版本 | **本檔所在的 commit**（§2–§4 隨程式碼變動；一個 commit 無法引用自己的 sha，所以驗證方式是重跑下方腳本，而不是比對編號）|
 | 掃描範圍 | `src/`、`pipelines/`、`services/` |
-| 檔案數 | 39 個 `.py`（不含 `__pycache__`） |
+| 檔案數 | 42 個 `.py`（不含 `__pycache__`） |
 | 生成方式 | `ast` 解析每個檔案的 `Import` / `ImportFrom`，聚合到套件層級 |
 
 **重新生成依賴圖**：
@@ -159,22 +159,29 @@ flowchart TD
 | :--- | :---: | :--- |
 | `src.data.loaders :: load_sensors` | ✓ | — |
 | `src.data.validation :: validate_sensors` | ✓ | — |
-| `src.features.build_features :: build_sensor_features` | ✓ | **管線內重新實作**滾動均值／標準差 |
+| `src.features.build_features :: build_sensor_features` | ✓ | **無後援——直接拋錯**（見下） |
 | `src.training.evaluate :: evaluate_classification` | ✓ | — |
 | `src.training.evaluate :: quality_gate` | ✓ | — |
 | `src.utils.config :: load_config` | ✓ | — |
-| `src.serving.healthcheck :: probe` | **✗ 模組不存在** | canary 探測直接回傳 `1.0` |
-| `src.serving.registry :: resolve_latest` | **✗ 模組不存在** | 用佔位 URI `models:/smart-factory/latest` |
-| `src.training.registry :: register_model` | **✗ 模組不存在** | 跳過註冊，回傳 `None` |
+| `src.serving.healthcheck :: probe` | ✓ | **無後援**——載不到即回 `0.0`（觸發回滾） |
+| `src.serving.registry :: resolve_latest` | ✓ | 硬編 URI `models:/smart-factory/latest`（仍待改進） |
+| `src.training.registry :: register_model` | ✓ | 跳過註冊，回傳 `None` |
 
-**那 3 個不存在的模組是刻意的擴充接縫，不是壞掉的 import**——
-程式碼自己標明「未提供 `src.training.registry`，跳過註冊（教學佔位）」。
+**9 個目標現在全部可載入。** 先前有 3 個指向不存在的模組（教學佔位），已補齊：
 
-但要知道兩個實際後果：
+- `src/training/registry.py` — 從 `train.py` 的私有 `_register_and_alias` 抽出來的公開模組。
+  抽出的目的就是消除路徑差異：**先前走 `make train-*` 會註冊、走 Prefect flow 不會**，
+  現在兩條路共用同一份邏輯。
+- `src/serving/registry.py` — alias → stage → 最新版本號的三層解析。
+- `src/serving/healthcheck.py` — 真實 HTTP 探測，讓 §5.3 的 rollback 分支走得到。
 
-1. **`pipelines.training_pipeline` 的註冊步驟目前是 no-op。**
-   走 `make train-*`（`src/training` 路徑）才會真的註冊模型；走 Prefect flow 不會。
-2. `canary_probe` 永遠回 `1.0`，所以 §5.3 的 rollback 分支走不到（見 [ADR-005](../architecture/adr/ADR-005-deployment-placeholders.md)）。
+**後援策略不再一致，這是刻意的**：
+
+| 情境 | 載不到時 | 為什麼 |
+| :--- | :--- | :--- |
+| 特徵計算 | **拋錯** | 兩份特徵邏輯 = 訓練/服務不一致，寧可停下 |
+| canary 探測 | **回 `0.0`** | 「驗不了」與「健康」是相反結論，預設要站保守那邊 |
+| 模型註冊 | 回 `None` | 模型已存在本地，registry 連不上不該讓訓練白跑 |
 
 **重掃動態邊**（靜態分析工具不會替你做）：
 
@@ -183,9 +190,11 @@ grep -rnE 'soft_import\(\s*"' pipelines/ \
   | sed -E 's/.*soft_import\(\s*"([^"]+)",\s*"([^"]+)".*/\1 :: \2/' | sort -u
 ```
 
-`src/features/build_features.py` 的後援複製了一份滾動特徵邏輯在 `pipelines/feature_pipeline.py` 裡。
-**兩份若漂移，管線算出的特徵會與訓練期不同**——正是本專案要防的 training/serving skew。
-目前 `src.features` 載得到，所以後援不會被走到；但這是一個要盯著的重複。
+**特徵計算的後援已被移除。** 先前 `pipelines/feature_pipeline.py` 在載不到 `src.features` 時，
+會在管線內自己重算一份滾動均值／標準差。那是兩份程式碼——其中一份改了視窗大小或 fillna 策略，
+管線算出的特徵就與訓練期不同，**而且不會有任何錯誤訊息**，只會得到一個安靜變差的模型。
+那正是本專案存在要防的 training/serving skew，所以現在改成**載不到就拋錯**：
+特徵定義只能有一個真相來源。
 
 ---
 
@@ -308,9 +317,16 @@ stateDiagram-v2
     Probed --> RolledBack: success_rate < canary_threshold
 ```
 
-> ⚠️ **此狀態機目前不可信**：`canary_probe` 是佔位，回傳寫死的 `1.0`，
-> 所以 `Probed → RolledBack` 這條邊**永遠不會被走到**。
-> 詳見 [ADR-005](../architecture/adr/ADR-005-deployment-placeholders.md)。
+**兩條邊都走得到了**（v1 曾因 `canary_probe` 寫死 `1.0` 而讓 `RolledBack` 不可達）。
+
+| 轉移 | 條件 | 判定來源 |
+| :--- | :--- | :--- |
+| `Probed → Promoted` | `success_rate >= canary_threshold`（預設 0.95） | `src/serving/healthcheck.py` 實測 |
+| `Probed → RolledBack` | 低於門檻，**含探測不到的 `0.0`** | 同上 |
+
+> 判定只有 `/healthz` 回 `ok` 才算成功——`degraded`（活著但少一個模型）**算失敗**。
+> canary 問的是「能不能接生產流量」，不是「還活著嗎」。詳見
+> [ADR-005](../architecture/adr/ADR-005-deployment-placeholders.md)。
 
 ---
 

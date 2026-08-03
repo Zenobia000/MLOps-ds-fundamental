@@ -1,0 +1,36 @@
+# =============================================================================
+# dev.tfvars.example — 複製成 dev.tfvars 後修改（dev.tfvars 已被 gitignore）
+# -----------------------------------------------------------------------------
+#   cp dev.tfvars.example dev.tfvars
+#
+# ★ 密碼不在這裡。db_password 刻意沒有 default,也不該寫進 tfvars——
+#   從環境變數注入,才不會有人把它一起 commit 上去：
+#
+#     export TF_VAR_db_password="$(your-secret-manager get mlflow-db-password)"
+#
+# 完整流程：
+#     terraform init
+#     terraform plan  -var-file=dev.tfvars
+#     terraform apply -var-file=dev.tfvars
+# =============================================================================
+
+environment = "dev"
+
+# artifact 儲存名稱。實際會再加一段隨機後綴（random_id）以確保全域唯一,
+# 因為 S3 之類的 bucket 名稱是全球共用命名空間。
+mlflow_artifact_bucket_name = "smart-factory-mlflow-artifacts"
+
+region = "ap-northeast-1"
+
+# 映像一律鎖明確版本,不用 latest——變數的 validation 會擋下 :latest。
+# 「線上跑的是哪一版」必須隨時答得出來,這與 uv.lock 鎖依賴是同一條原則。
+mlflow_image  = "ghcr.io/mlflow/mlflow:v2.12.1"
+serving_image = "smart-factory-serve:0.1.0"
+
+serving_cpu       = 1
+serving_memory_mb = 2048
+
+tags = {
+  owner      = "mlops-course"
+  cost_center = "training"
+}

@@ -56,14 +56,19 @@
 
 ---
 
-## 4. 已知的教學簡化
+## 4. 已知的邊界
 
-這是參考實作，有幾處刻意留成佔位。**文件不會假裝它們是生產就緒的**：
+這是參考實作。以下是**目前的真實邊界**，文件不會把它們說成生產就緒：
 
 | 位置 | 現況 | 影響 |
 | :--- | :--- | :--- |
-| `pipelines/deployment_pipeline.py` 的 `canary_probe` | 直接回傳 `1.0`，沒有真的探測 | canary 判定永遠 promote，見 [ADR-005](architecture/adr/ADR-005-deployment-placeholders.md) |
-| `infra/terraform/` | 只有 README，無實際 IaC | 無法一鍵起雲端環境 |
 | 三個模型的訓練資料 | 玩具 / 合成資料 | 指標不具業務意義（vision 的 f1 常為 0，品質門檻會正確擋下註冊）|
+| `infra/terraform/` | **示意性 IaC**：用 `local`/`random` provider 產出資源描述檔，非真實雲端資源 | 結構、變數化、秘密處理都可用；換成雲商 provider 才會真的開資源 |
+| `resolve_model` 的最終後援 | registry 完全不可用時落到硬編 URI `models:/smart-factory/latest` | 真實部署應在此失敗而非猜測（[ADR-005](architecture/adr/ADR-005-deployment-placeholders.md)）|
+| canary 探測 | 驗的是**服務健康**，不是模型品質 | 載得起來但預測很爛的模型仍會通過；模型品質由訓練期門檻負責 |
 
-修正這些不是 bug fix，是把教學骨架接上真實資料源——屬於學員的 Capstone 練習範圍。
+接上真實資料源、換成雲商 provider——這些不是 bug fix，是學員的 Capstone 練習範圍。
+
+> **已解除的舊限制**（v1 曾列在這裡）：`canary_probe` 寫死 `1.0` 已改為真實 HTTP 探測；
+> 三個 `soft_import` 指向的缺失模組已補齊。另外 v1 曾誤稱「`infra/terraform/` 只有 README」——
+> 那是錯的，`.tf` 檔一直都在，是當初用只搜 `*.md` 的掃描做了錯誤推論。

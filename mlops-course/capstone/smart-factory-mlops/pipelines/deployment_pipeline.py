@@ -44,16 +44,29 @@ def build_image(model_uri: str, config: dict) -> str:
 
 @task
 def canary_probe(image_tag: str) -> float:
-    """對 canary 實例做 smoke 探測，回傳成功率（佔位回傳 1.0）。"""
+    """對 canary 實例做 smoke 探測，回傳成功率。
+
+    實際探測邏輯在 ``src.serving.healthcheck.probe``：連打數次 ``/healthz``，
+    只有 ``status == "ok"`` 才算成功（``degraded`` 算失敗——少了一個模型的版本
+    不該承接生產流量）。
+
+    探測位址由 ``CANARY_BASE_URL`` 環境變數或設定的 ``deploy.canary_base_url`` 決定；
+    image tag 本身推導不出服務位址。
+
+    ★ 探測不到時回傳 0.0 而非 1.0。
+      「連不上」與「健康」是相反的結論，預設值站錯邊會讓管線把壞版本推上線。
+    """
     prober = soft_import("src.serving.healthcheck", "probe")
-    if prober is not None:
-        try:
-            return float(prober(image_tag))
-        except Exception as exc:  # noqa: BLE001
-            logger.warning("健康探測失敗（%s），視為 0.0。", exc)
-            return 0.0
-    logger.info("[佔位] canary 探測 %s 假定成功。", image_tag)
-    return 1.0
+    if prober is None:
+        logger.error(
+            "找不到 src.serving.healthcheck.probe——無法驗證 canary，" "保守判定為 0.0（觸發回滾）。"
+        )
+        return 0.0
+    try:
+        return float(prober(image_tag))
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("健康探測失敗（%s），視為 0.0。", exc)
+        return 0.0
 
 
 @task

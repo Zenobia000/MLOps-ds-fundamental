@@ -66,6 +66,21 @@ feature_repo/*.db
 /.dvc/cache
 /.dvc/tmp
 
+# --- Terraform（M5 IaC）------------------------------------------------------
+# ★ terraform.tfstate 會以「明文」保存所有變數值,包含被標成 sensitive 的密碼。
+#   sensitive 只影響 CLI 輸出顯示,不會加密 state 檔本身——commit 它等同外洩憑證。
+#   正式環境請改用遠端 state（見 infra/terraform/README.md 的 backend "s3" 區塊）。
+infra/terraform/.terraform/
+infra/terraform/.terraform.lock.hcl
+infra/terraform/*.tfstate
+infra/terraform/*.tfstate.*
+infra/terraform/*.tfplan
+# 示意 apply 產出的描述檔,可重新生成
+infra/terraform/.generated/
+# .tfvars 可能含環境細節;保留 .example 供參考
+infra/terraform/*.tfvars
+!infra/terraform/*.tfvars.example
+
 # --- 編輯器 / 系統 -----------------------------------------------------------
 .vscode/
 .idea/
