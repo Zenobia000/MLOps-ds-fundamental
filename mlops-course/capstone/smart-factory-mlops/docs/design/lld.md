@@ -145,6 +145,48 @@ flowchart TD
 兩者透過**檔案**而非 import 耦合。好處是階段可獨立重跑；代價是**特徵欄位的契約沒有型別檢查**，
 只能靠 `tests/data/test_expectations.py` 的命名測試守住。
 
+### 3.1 這張圖的盲點：9 條動態邊
+
+**上面的圖是靜態分析的結果，它低估了真實耦合。**
+`pipelines/` 用 `soft_import()`（包 `importlib`）做軟相依，AST 掃不到這些邊。
+最明顯的證據：`src.features` 在圖上扇入為 0，看起來沒人用——
+實際上 `pipelines/feature_pipeline.py` 正是靠
+`soft_import("src.features.build_features", "build_sensor_features")` 呼叫它。
+
+共 13 處呼叫、9 個相異目標。逐一實際載入驗證的結果：
+
+| 目標 | 可載入 | 載不到時的後援 |
+| :--- | :---: | :--- |
+| `src.data.loaders :: load_sensors` | ✓ | — |
+| `src.data.validation :: validate_sensors` | ✓ | — |
+| `src.features.build_features :: build_sensor_features` | ✓ | **管線內重新實作**滾動均值／標準差 |
+| `src.training.evaluate :: evaluate_classification` | ✓ | — |
+| `src.training.evaluate :: quality_gate` | ✓ | — |
+| `src.utils.config :: load_config` | ✓ | — |
+| `src.serving.healthcheck :: probe` | **✗ 模組不存在** | canary 探測直接回傳 `1.0` |
+| `src.serving.registry :: resolve_latest` | **✗ 模組不存在** | 用佔位 URI `models:/smart-factory/latest` |
+| `src.training.registry :: register_model` | **✗ 模組不存在** | 跳過註冊，回傳 `None` |
+
+**那 3 個不存在的模組是刻意的擴充接縫，不是壞掉的 import**——
+程式碼自己標明「未提供 `src.training.registry`，跳過註冊（教學佔位）」。
+
+但要知道兩個實際後果：
+
+1. **`pipelines.training_pipeline` 的註冊步驟目前是 no-op。**
+   走 `make train-*`（`src/training` 路徑）才會真的註冊模型；走 Prefect flow 不會。
+2. `canary_probe` 永遠回 `1.0`，所以 §5.3 的 rollback 分支走不到（見 [ADR-005](../architecture/adr/ADR-005-deployment-placeholders.md)）。
+
+**重掃動態邊**（靜態分析工具不會替你做）：
+
+```bash
+grep -rnE 'soft_import\(\s*"' pipelines/ \
+  | sed -E 's/.*soft_import\(\s*"([^"]+)",\s*"([^"]+)".*/\1 :: \2/' | sort -u
+```
+
+`src/features/build_features.py` 的後援複製了一份滾動特徵邏輯在 `pipelines/feature_pipeline.py` 裡。
+**兩份若漂移，管線算出的特徵會與訓練期不同**——正是本專案要防的 training/serving skew。
+目前 `src.features` 載得到，所以後援不會被走到；但這是一個要盯著的重複。
+
 ---
 
 ## 4. 關鍵資料結構
