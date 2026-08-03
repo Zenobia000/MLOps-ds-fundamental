@@ -14,6 +14,7 @@
 | [`architecture/sad.md`](architecture/sad.md) | 系統由哪些 runtime 組成、邊界在哪、資料怎麼流、怎麼部署 | `03_architecture/sad.md` |
 | [`architecture/adr/`](architecture/adr/) | **為什麼選這個工具、放棄了什麼** | `03_architecture/adr.md`（每決策一份） |
 | [`design/api_spec.md`](design/api_spec.md) ＋ [`openapi.yaml`](design/openapi.yaml) | 推論服務的對外契約 | `04_design/api_spec.md` |
+| [`design/lld.md`](design/lld.md) | codebase 長什麼樣、誰依賴誰、狀態怎麼流轉 | `04_design/lld.md` |
 | [`qa/test_plan.md`](qa/test_plan.md) | 測什麼、測到什麼程度、品質門檻怎麼擋 | `05_qa/test_plan.md` |
 | [`ops/`](ops/) | 出事了怎麼辦（漂移告警、門檻擋下、服務降級） | `06_ops/runbook.md`（每症狀一份） |
 
@@ -22,7 +23,7 @@
 
 ---
 
-## 2. 為什麼是這五份（模板有 15 份）
+## 2. 為什麼是這六份（模板有 15 份）
 
 模板庫的 Pilot 階段建議是 15 份全寫。**這個專案刻意不照做**，因為它有兩個特性讓部分模板不適用：
 
@@ -36,7 +37,6 @@
 | `ux_research` / `information_architecture` / `ui_spec` | **完全沒有 UI**。對外介面只有三個 HTTP 端點，契約寫在 `api_spec` |
 | `db_design` | 沒有關聯式資料庫。持久化只有 Feast 的 SQLite online store 與 MLflow 的 SQLite backend，資料架構寫在 [`sad.md` §6](architecture/sad.md#6-資料架構) |
 | `uat_plan` | 沒有客戶驗收輪次。品質把關由 CI 的自動門檻負責，見 [`test_plan.md`](qa/test_plan.md) |
-| `lld` | `src/` 每個模組都有完整 docstring，再寫一份低階設計只會變成第二份會過期的真相。模組邊界寫在 `sad.md` §2 |
 | `deployment_and_operations` | 部署拓撲寫在 [`sad.md` §7](architecture/sad.md#7-部署視圖)；日常操作寫在 `../README.md` 的 Quickstart。等真的有多環境（stage/prod）再單獨成篇 |
 
 > 模板庫自己的規則就是「**不按序填滿**、只讀與當前範圍相關的章節」。
@@ -51,7 +51,8 @@
 1. [`../README.md`](../README.md) — 它是什麼、怎麼跑起來
 2. [`architecture/sad.md`](architecture/sad.md) — 系統長什麼樣
 3. [`architecture/adr/`](architecture/adr/) — 為什麼長這樣（**教學價值最高**）
-4. 要接 API → [`design/api_spec.md`](design/api_spec.md)；要維運 → [`ops/`](ops/)
+4. [`design/lld.md`](design/lld.md) — 要改程式前先看：模組依賴、狀態機契約
+5. 要接 API → [`design/api_spec.md`](design/api_spec.md)；要維運 → [`ops/`](ops/)
 
 ---
 
