@@ -182,8 +182,12 @@ curl -X POST http://localhost:3000/predict_maintenance -H 'Content-Type: applica
 
 ## 6. 資料夾導覽
 
+> **工程文件在 [`docs/`](docs/README.md)**：架構（SAD）、決策記錄（ADR）、API 契約、
+> 測試計畫、維運 runbook。想知道「**為什麼選這個工具**」看 [`docs/architecture/adr/`](docs/architecture/adr/)。
+
 ```
 smart-factory-mlops/
+├── docs/            # 工程文件（SAD / ADR / api_spec / test_plan / runbook）
 ├── conf/            # 集中設定（config.yaml + data/ model/ train/ hpo/）── 本層核心
 ├── src/             # 正式原始碼（data/ features/ models/ training/ tuning/ serving/ monitoring/ utils/）
 ├── feature_repo/    # Feast 特徵商店（entity = machine_id）
