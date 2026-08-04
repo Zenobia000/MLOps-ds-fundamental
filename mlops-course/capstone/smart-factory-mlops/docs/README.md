@@ -3,7 +3,9 @@
 > **版本:** v1.0 | **更新:** 2026-08-03 | **狀態:** 草稿
 > **Owner:** Capstone 維護者
 > **定位**：本專案的工程文件索引。說明**寫了哪幾份、為什麼是這幾份、哪些刻意不寫**。
-> 模板來源：[`VibeCoding_Workflow_Templates`](../../../VibeCoding_Workflow_Templates/INDEX.md)
+> 模板來源：VibeCoding 工程文件模板庫（`01_requirements`–`06_ops` 六層結構）。
+> 該模板庫**不隨本 repo 發布**——它是撰寫這些文件時的參考格式，不是執行期依賴，
+> 所以本目錄的文件都是自足的，讀它們不需要拿到模板庫。
 
 ---
 
